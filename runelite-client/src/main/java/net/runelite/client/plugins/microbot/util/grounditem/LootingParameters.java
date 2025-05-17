@@ -51,8 +51,8 @@ public class LootingParameters {
      * @param antiLureProtection A boolean indicating whether anti-lure protection should be enabled.
      * @param ignoredNames       The names of the items to be ignored.
      */
-    public LootingParameters(int range, int minItems, int minQuantity, int minInvSlots, boolean delayedLooting, boolean antiLureProtection, String[] ignoredNames, String... names) {
-        setValues(0, 0, range, minItems, minQuantity, minInvSlots, delayedLooting, antiLureProtection, ignoredNames, null);
+    public LootingParameters(int minValue, int maxValue, int range, int minItems, int minInvSlots, boolean delayedLooting, boolean antiLureProtection, String[] ignoredNames) {
+        setValues(minValue, maxValue, range, minItems, 1, minInvSlots, delayedLooting, antiLureProtection, ignoredNames, null);
     }
 
     private void setValues(int minValue, int maxValue, int range, int minItems, int minQuantity, int minInvSlots, boolean delayedLooting, boolean antiLureProtection, String[] ignoredNames, String[] names) {
