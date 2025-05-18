@@ -837,8 +837,7 @@ public class revKillerScript extends Script {
                     if(Rs2Player.isMoving()){
                         sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(3000,6000));
                     }
-                }
-                if(!Rs2GroundItem.isItemBasedOnValueOnGround(500,10)){
+                } else {
                     break;
                 }
             }
@@ -899,6 +898,7 @@ public class revKillerScript extends Script {
                 DidWeDie();
                 OpenTheInv();
                 stuckAtEnclave();
+                stopTeleSpam();
                 Rs2Bank.walkToBankAndUseBank(BankLocation.FEROX_ENCLAVE);
             }
         } else {
