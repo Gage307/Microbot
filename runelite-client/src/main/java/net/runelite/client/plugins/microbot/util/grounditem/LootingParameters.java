@@ -104,11 +104,12 @@ public class LootingParameters {
         return antiLureProtection;
     }
 
+    public String[] getIgnoredNames() {
+        return ignoredNames;
+    }
+
     public String[] getNames() {
         return names;
     }
 
-    public String[] getIgnoredNames() {
-        return ignoredNames;
-    }
 }
