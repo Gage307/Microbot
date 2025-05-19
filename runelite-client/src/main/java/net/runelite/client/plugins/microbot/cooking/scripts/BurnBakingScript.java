@@ -29,8 +29,9 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static net.runelite.api.ItemID.BUCKET_OF_WATER;
-import static net.runelite.api.ItemID.POT_OF_FLOUR;
+import static net.runelite.api.ItemID.*;
+import static net.runelite.api.gameval.ItemID.CAKE_TIN;
+import static net.runelite.api.gameval.ItemID.EGG;
 import static net.runelite.client.plugins.microbot.util.npc.Rs2Npc.getNpcs;
 import static net.runelite.client.plugins.microbot.util.player.Rs2Player.toggleRunEnergy;
 
@@ -387,8 +388,8 @@ public class BurnBakingScript extends Script {
                         if (!Rs2Inventory.hasItem(POT_OF_FLOUR) || !Rs2Inventory.hasItem(BUCKET_OF_WATER)) {
                             Microbot.log("trying to withdrawX didn't populate inventory, so withdrawing all");
                             Rs2Bank.openBank();
-                            Rs2Bank.withdrawAll(POT_OF_FLOUR);
-                            Rs2Bank.withdrawAll(BUCKET_OF_WATER);
+                            if (!Rs2Inventory.hasItem(POT_OF_FLOUR)) {Rs2Bank.withdrawAll(POT_OF_FLOUR);}
+                            if (!Rs2Inventory.hasItem(BUCKET_OF_WATER)) {Rs2Bank.withdrawAll(BUCKET_OF_WATER);}
                         }
                     } else {
                         Rs2Bank.depositAll(); //if inventory is not empty deposit all
@@ -788,6 +789,24 @@ public class BurnBakingScript extends Script {
 
             Rs2Bank.withdrawX("Pot of flour", 7);
             sleep(500, 800);
+
+            if (!Rs2Inventory.isFull()) {
+                Microbot.log("inventory not full after attempted withdrawing of 4x of 7 items (28 items)");
+                Microbot.log("Withdrawing ALL of X item IF inventory doesn't X item");
+                Microbot.log("If you are looping here make sure to have an EVEN NUMBER of EACH ingredient at the start");
+                if (!Rs2Inventory.contains(CAKE_TIN)) Rs2Bank.withdrawAll("Cake tin");
+                sleep(500, 800);
+
+                if (!Rs2Inventory.contains(EGG)) Rs2Bank.withdrawAll("Egg");
+                sleep(500, 800);
+
+                if (!Rs2Inventory.contains(BUCKET_OF_MILK)) Rs2Bank.withdrawAll("Bucket of Milk");
+                sleep(500, 800);
+
+                if (!Rs2Inventory.contains(POT_OF_FLOUR)) Rs2Bank.withdrawAll("Pot of flour");
+                sleep(500, 800);
+
+            }
 
             // Close the bank after completing withdrawals
             Rs2Bank.closeBank();
