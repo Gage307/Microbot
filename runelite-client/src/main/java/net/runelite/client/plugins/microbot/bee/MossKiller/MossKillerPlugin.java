@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.bee.MossKiller;
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Deque;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -93,15 +94,7 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
     private boolean useMelee = false;
     private boolean useRange = false;
 
-    public boolean firemethod = false;
-
-
     private int consecutiveHitsplatsMain = 0;
-    private int consecutiveHitsplatsSafeSpot1 = 0;
-    private long lastHitsplatTimeMain = 0;
-    private long lastHitsplatTimeSafeSpot1 = 0;
-    private static final long CONSECUTIVE_HITSPLAT_TIMEOUT = 3000; //
-
     private boolean runeScimitar = false;
 
     private final Object targetLock = new Object();
@@ -112,15 +105,19 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
     @Getter
     private boolean defensive;
 
+    private int projectileCount = 0;
+    public boolean windStrikeflag = false;
+
     @Getter
     private boolean superNullTarget = false;
 
     private boolean isJammed;
+    private boolean superJammed;
 
     private boolean hitsplatIsTheirs = false;
 
     private int hitsplatSetTick = -1; // Initialize to an invalid tick value
-
+    private long lastHitsplatTimeMain = 0;
     // Tracks the nearby player condition
     private boolean isPlayerNearby = false;
 
@@ -289,6 +286,10 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
         return isJammed;
     }
 
+    public boolean isSuperJammed() {
+        return superJammed;
+    }
+
     public void resetWorldHopFlag() {
         worldHopFlag = false;
     }
@@ -385,7 +386,8 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
                 }
             }
 
-            if (config.combatMode() == CombatMode.FIGHT && currentTarget != null) {
+            if (config.combatMode() == CombatMode.FIGHT) {
+                //note to self - this is where target is set
                 trackAttackers();
             }
 
@@ -412,10 +414,19 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
                         isJammed = true;
                     }
 
+                    if (tickCount >= 500) {
+                        superJammed = true;
+                    }
+
                 } else {
                     tickCount = 0;
                     isJammed = false;
+                    superJammed = false;
                 }
+            }
+
+            if (config.wildySafer() && !windStrikeflag) {
+                checkProjectiles();
             }
 
         if (!config.wildy() && !config.wildySafer()) {
@@ -435,6 +446,43 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
                 && Rs2Player.getPlayersInCombatLevelRange() != null) {
             wildySaferScript.checkCombatAndRunToBank();
         }*/
+    }
+
+    public void checkProjectiles()
+    {
+        if (projectileCount > 10)
+        {
+            // Stop processing after 10 detections
+            return;
+        }
+
+        Player localPlayer = Rs2Player.getLocalPlayer();
+        if (localPlayer == null)
+            return;
+
+        WorldView worldView = Microbot.getClient().getWorldView(-1);
+        if (worldView == null)
+            return;
+
+        LocalPoint playerPos = localPlayer.getLocalLocation();
+
+        Deque<Projectile> projectiles = worldView.getProjectiles();
+        for (Projectile projectile : projectiles)
+        {
+            if (projectile == null)
+                continue;
+
+            if (projectile.getId() == 91)
+            {
+                LocalPoint start = new LocalPoint(projectile.getX1(), projectile.getY1());
+                if (start.equals(playerPos))
+                {
+                    windStrikeflag = true;
+                    projectileCount++;
+                    break;
+                }
+            }
+        }
     }
 
 
@@ -457,6 +505,7 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
             return bryophyta.getWorldLocation();
         }
     }
+
 
     private void trackAttackers() {
         Player localPlayer = Microbot.getClient().getLocalPlayer();
@@ -830,6 +879,7 @@ public class MossKillerPlugin extends Plugin implements SchedulablePlugin {
         wildySaferScript.shutdown();
         startedFromScheduler = false;
         preparingForShutdown = false;
+        projectileCount = 0;
         overlayManager.remove(mossKillerOverlay);
         }
     }

@@ -205,12 +205,16 @@ public class BurnBakingScript extends Script {
     }
 
     private void withdrawAndCheck(String itemName) {
-        Rs2Bank.withdrawAll(itemName);
-        sleep(1200, 1800);
-        if (!Rs2Inventory.contains(itemName)) {
-            System.out.println(itemName + " was not withdrawn, retrying...");
+        for (int attempt = 0; attempt < 5 && !Rs2Inventory.contains(itemName); attempt++) {
+            if (attempt > 0) {
+                Microbot.log(itemName + " was not withdrawn, retrying... (Attempt " + (attempt + 1) + ")");
+            }
             Rs2Bank.withdrawAll(itemName);
             sleep(1200, 1800);
+        }
+
+        if (!Rs2Inventory.contains(itemName)) {
+            Microbot.log("Failed to withdraw " + itemName + " after multiple attempts!");
         }
     }
 
@@ -396,11 +400,14 @@ public class BurnBakingScript extends Script {
                         System.out.println("Missing ingredients in the bank for bread-making.");
                         Microbot.log("Could not find flour or water in the bank for bread-making.");
                     }
-                }
+                } else if (!Rs2Bank.isOpen() && Rs2Inventory.isEmpty()) {Rs2Bank.openBank();}
             }
             // Step 5: If we already have flour and water in the inventory
-            else if (Rs2Inventory.hasItem("Pot of flour", true) && Rs2Inventory.hasItem("Bucket of water", true)) {
+            else if (Rs2Inventory.hasItem(POT_OF_FLOUR) && Rs2Inventory.hasItem(BUCKET_OF_WATER)) {
                 // Combine flour and water to make bread dough
+                if (Rs2Bank.isOpen()) {
+                    Rs2Bank.closeBank();
+                    sleep(900, 1300);}
 
                 Rs2Inventory.combineClosest("Pot of flour", "Bucket of water");
 
@@ -792,7 +799,7 @@ public class BurnBakingScript extends Script {
 
             if (!Rs2Inventory.isFull()) {
                 Microbot.log("inventory not full after attempted withdrawing of 4x of 7 items (28 items)");
-                Microbot.log("Withdrawing ALL of X item IF inventory doesn't X item");
+                Microbot.log("Withdrawing ALL of X item(s) IF inventory doesn't have X item");
                 Microbot.log("If you are looping here make sure to have an EVEN NUMBER of EACH ingredient at the start");
                 if (!Rs2Inventory.contains(CAKE_TIN)) Rs2Bank.withdrawAll("Cake tin");
                 sleep(500, 800);
