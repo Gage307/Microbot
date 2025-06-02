@@ -100,7 +100,7 @@ public class Rs2InventorySetup {
             InventorySetupsItem inventorySetupsItem = entry.getValue().get(0);
             int key = entry.getKey();
 
-            if (inventorySetupsItem.getId() == -1) continue;
+            if (InventorySetupsItem.itemIsDummy(inventorySetupsItem)) continue;
 
             int withdrawQuantity = calculateWithdrawQuantity(entry.getValue(), inventorySetupsItem, key);
             if (withdrawQuantity == 0) continue;
@@ -124,7 +124,7 @@ public class Rs2InventorySetup {
             withdrawItem(inventorySetupsItem, withdrawQuantity);
         }
 
-        sleep(1000);
+		sleep(800, 1200);
 
         return doesInventoryMatch();
     }
@@ -151,7 +151,7 @@ public class Rs2InventorySetup {
         if (items.size() == 1) {
             Rs2ItemModel rs2Item = Rs2Inventory.get(key);
             if (rs2Item != null && rs2Item.isStackable()) {
-                withdrawQuantity = inventorySetupsItem.getQuantity() - rs2Item.quantity;
+                withdrawQuantity = inventorySetupsItem.getQuantity() - rs2Item.getQuantity();
                 if (Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), inventorySetupsItem.getQuantity())) {
                     return 0;
                 }
@@ -185,8 +185,8 @@ public class Rs2InventorySetup {
             } else {
                 Rs2Bank.withdrawItem(item.getId());
             }
-            sleep(100, 250);
         }
+		sleepUntil(() -> Rs2Inventory.hasItemAmount(item.getName(), item.getQuantity()));
     }
 
     /**
@@ -236,41 +236,42 @@ public class Rs2InventorySetup {
             }
 
             if (inventorySetupsItem.isFuzzy()) {
+				if (Rs2Equipment.isWearing(inventorySetupsItem.getName()))
+					continue;
 
-                if (Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), (int) inventorySetup.getInventory().stream().filter(x -> x.getId() == inventorySetupsItem.getId()).count()))
-                    continue;
-                if (Rs2Equipment.isWearing(inventorySetupsItem.getName()))
-                    continue;
-
-                if (Rs2Inventory.hasItem(inventorySetupsItem.getName())) {
+                if (Rs2Inventory.hasItem(inventorySetupsItem.getName()) || Rs2Inventory.hasItemAmount(inventorySetupsItem.getName(), (int) inventorySetup.getInventory().stream().filter(x -> x.getId() == inventorySetupsItem.getId()).count())) {
                     Rs2Bank.wearItem(inventorySetupsItem.getName());
                     continue;
                 }
 
                 if (inventorySetupsItem.getQuantity() > 1) {
                     Rs2Bank.withdrawAllAndEquip(inventorySetupsItem.getName());
-                    sleep(100, 250);
                 } else {
                     Rs2Bank.withdrawAndEquip(inventorySetupsItem.getName());
-                    sleep(100, 250);
                 }
+
+				sleepUntil(() -> Rs2Equipment.isWearing(inventorySetupsItem.getName()));
             } else {
-                if (inventorySetupsItem.getId() == -1 || (!Rs2Bank.hasItem(inventorySetupsItem.getName()) && !Rs2Inventory.hasItem(inventorySetupsItem.getName())))
+                if (!Rs2Bank.hasItem(inventorySetupsItem.getName()) && !Rs2Inventory.hasItem(inventorySetupsItem.getName()))
                     continue;
+
                 if (Rs2Inventory.hasItem(inventorySetupsItem.getName())) {
                     Rs2Bank.wearItem(inventorySetupsItem.getName());
+					sleepUntil(() -> Rs2Equipment.isWearing(inventorySetupsItem.getName()));
                     continue;
                 }
+
                 if (inventorySetupsItem.getQuantity() > 1) {
                     Rs2Bank.withdrawAllAndEquip(inventorySetupsItem.getName());
-                    sleep(100, 250);
                 } else {
                     Rs2Bank.withdrawAndEquip(inventorySetupsItem.getName());
                 }
+
+				sleepUntil(() -> Rs2Equipment.isWearing(inventorySetupsItem.getName()));
             }
         }
 
-        sleep(1000);
+        sleep(800, 1200);
 
         return doesEquipmentMatch();
     }
