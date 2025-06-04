@@ -1,7 +1,9 @@
 package net.runelite.client.plugins.microbot.agility;
 import com.google.common.collect.ImmutableSet;
+import java.util.function.Predicate;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.agility.AgilityPlugin;
 import net.runelite.client.plugins.agility.Obstacle;
@@ -207,7 +209,7 @@ public class AgilityScript extends Script {
                     for (RS2Item markOfGraceTile : marksOfGrace) {
                         if (Microbot.getClient().getTopLevelWorldView().getPlane() != markOfGraceTile.getTile().getPlane())
                             continue;
-                        if (!Rs2Walker.canReach(markOfGraceTile.getTile().getWorldLocation()))
+                        if (!Rs2GameObject.canReach(markOfGraceTile.getTile().getWorldLocation()))
                             continue;
                         Rs2GroundItem.loot(markOfGraceTile.getItem().getId());
                         Rs2Player.waitForWalking();
@@ -231,7 +233,31 @@ public class AgilityScript extends Script {
                                 .map(AgilityObstacleModel::getObjectID)
                                 .collect(Collectors.toList());
 
-                        TileObject gameObject = Rs2GameObject.findObject(objectIds);
+						Predicate<TileObject> vaildObjectPredicate = o -> {
+							if (!objectIds.contains(o.getId())) return false;
+							if (Microbot.getClient().getLocalPlayer().getWorldLocation().getPlane() != o.getPlane()) return false;
+
+							if (o instanceof GroundObject) {
+								return Rs2GameObject.canReach(o.getWorldLocation(), 2, 2);
+							}
+
+							if (o instanceof GameObject) {
+								GameObject _o = (GameObject) o;
+
+								switch (o.getId()) {
+									case ObjectID.MARKET_STALL_14936:
+										return Rs2GameObject.canReach(_o.getWorldLocation(), _o.sizeX(), _o.sizeY(), 4, 4);
+									case ObjectID.BEAM_42220:
+										return o.getWorldLocation().distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation()) < 6;
+									default:
+										return Rs2GameObject.canReach(_o.getWorldLocation(), _o.sizeX() + 2, _o.sizeY() + 2, 4, 4);
+								}
+							}
+
+							return true;
+						};
+
+                        TileObject gameObject = Rs2GameObject.getAll(vaildObjectPredicate).stream().findFirst().orElse(null);
 
                         if (gameObject == null) {
                             Microbot.log("No agility obstacle found. Report this as a bug if this keeps happening.");
@@ -262,7 +288,7 @@ public class AgilityScript extends Script {
     private void tryAlchingItem(MicroAgilityConfig config) {
         if (!config.alchemy()) return;
 
-        String itemForAlching = getItemForAlching(config);
+        String itemForAlching = getAlchItem(config);
 
         if (itemForAlching == null) {
             Microbot.log("No items specified for alching or none available.");
@@ -271,24 +297,28 @@ public class AgilityScript extends Script {
         }
     }
 
-    private String getItemForAlching(MicroAgilityConfig config) {
+    private String getAlchItem(MicroAgilityConfig config) {
         String itemsInput = config.itemsToAlch().trim();
         if (itemsInput.isEmpty()) {
             return null;
         }
 
-        List<String> items = Arrays.stream(itemsInput.split(","))
-                .map(String::trim)
-                .filter(item -> !item.isEmpty())
-                .filter(Rs2Inventory::hasNotedItem)
-                .collect(Collectors.toList());
+		List<String> itemsToAlch;
 
-        if (items.isEmpty()) {
+		if (itemsInput.contains(",") || itemsInput.contains(", ")) {
+			itemsToAlch = Arrays.stream(itemsInput.split(","))
+				.map(String::trim)
+				.map(String::toLowerCase)
+				.collect(Collectors.toList());
+		} else {
+			itemsToAlch = Collections.singletonList(itemsInput.trim().toLowerCase());
+		}
+
+        if (itemsToAlch.isEmpty()) {
             return null;
         }
 
-        // Return the first available item in the list
-        return items.get(0);
+        return itemsToAlch.get(0);
     }
 
     @Override

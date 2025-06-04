@@ -144,7 +144,27 @@ public class Rs2GameObject {
         return findObjectById(id) != null;
     }
 
-    @Deprecated
+	public static boolean canReach(WorldPoint target, int objectSizeX, int objectSizeY, int pathSizeX, int pathSizeY) {
+		if (target == null) return false;
+
+		List<WorldPoint> path = Rs2Player.getRs2WorldPoint().pathTo(target, true);
+		if (path == null || path.isEmpty()) return false;
+
+		WorldArea pathArea = new WorldArea(path.get(path.size() - 1), pathSizeX, pathSizeY);
+		WorldArea objectArea = new WorldArea(target, objectSizeX + 2, objectSizeY + 2);
+
+		return pathArea.intersectsWith2D(objectArea);
+	}
+
+	public static boolean canReach(WorldPoint target, int objectSizeX, int objectSizeY) {
+		return canReach(target, objectSizeX, objectSizeY, 3, 3);
+	}
+
+	public static boolean canReach(WorldPoint target) {
+		return canReach(target, 2, 2, 2, 2);
+	}
+
+	@Deprecated
     public static TileObject findObjectById(int id) {
         return getAll(o -> o.getId() == id).stream().findFirst().orElse(null);
     }
@@ -355,32 +375,6 @@ public class Rs2GameObject {
 
     public static WallObject findGrandExchangeBooth() {
         return findGrandExchangeBooth(20);
-    }
-
-    @Deprecated(since = "1.5.7 - use signature with Integer[] ids", forRemoval = true)
-    public static TileObject findObject(List<Integer> ids) {
-        for (int id : ids) {
-            TileObject object = findObjectById(id);
-            if (object == null) continue;
-            if (Rs2Player.getWorldLocation().getPlane() != object.getPlane()) continue;
-            if (object instanceof GroundObject && !Rs2Walker.canReach(object.getWorldLocation()))
-                continue;
-
-            //exceptions if the pathsize needs to be bigger
-            if (object.getId() == net.runelite.api.ObjectID.MARKET_STALL_14936) {
-                if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY(), 4, 4))
-                    continue;
-            } else if (object.getId() == net.runelite.api.ObjectID.BEAM_42220) {
-                if (object.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) > 6)
-                    continue;
-            } else {
-                if (object instanceof GameObject && !Rs2Walker.canReach(object.getWorldLocation(), ((GameObject) object).sizeX(), ((GameObject) object).sizeY()))
-                    continue;
-            }
-
-            return object;
-        }
-        return null;
     }
 
     @Deprecated

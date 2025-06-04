@@ -584,13 +584,13 @@ public class Rs2Walker {
     // takes an avg 200-300 ms
     // Used mainly for agility, might have to tweak this for other stuff
     public static boolean canReach(WorldPoint worldPoint, int sizeX, int sizeY, int pathSizeX, int pathSizeY) {
-        if (ShortestPathPlugin.getPathfinderConfig().getTransports().isEmpty()) {
-            ShortestPathPlugin.getPathfinderConfig().refresh();
-        }
-        Pathfinder pathfinder = new Pathfinder(ShortestPathPlugin.getPathfinderConfig(), Rs2Player.getWorldLocation(), worldPoint);
-        pathfinder.run();
-        WorldArea pathArea = new WorldArea(pathfinder.getPath().get(pathfinder.getPath().size() - 1), pathSizeX, pathSizeY);
-        WorldArea objectArea = new WorldArea(worldPoint, sizeX + 2, sizeY + 2);
+		if (ShortestPathPlugin.getPathfinderConfig().getTransports().isEmpty()) {
+			ShortestPathPlugin.getPathfinderConfig().refresh();
+		}
+		Pathfinder pathfinder = new Pathfinder(ShortestPathPlugin.getPathfinderConfig(), Rs2Player.getWorldLocation(), worldPoint);
+		pathfinder.run();
+		WorldArea pathArea = new WorldArea(pathfinder.getPath().get(pathfinder.getPath().size() - 1), pathSizeX, pathSizeY);
+		WorldArea objectArea = new WorldArea(worldPoint, sizeX + 2, sizeY + 2);
         return pathArea
                 .intersectsWith2D(objectArea);
     }
@@ -598,15 +598,7 @@ public class Rs2Walker {
     // takes an avg 200-300 ms
     // Used mainly for agility, might have to tweak this for other stuff
     public static boolean canReach(WorldPoint worldPoint, int sizeX, int sizeY) {
-        if (ShortestPathPlugin.getPathfinderConfig().getTransports().isEmpty()) {
-            ShortestPathPlugin.getPathfinderConfig().refresh();
-        }
-        Pathfinder pathfinder = new Pathfinder(ShortestPathPlugin.getPathfinderConfig(), Rs2Player.getWorldLocation(), worldPoint);
-        pathfinder.run();
-        WorldArea pathArea = new WorldArea(pathfinder.getPath().get(pathfinder.getPath().size() - 1), 3, 3);
-        WorldArea objectArea = new WorldArea(worldPoint, sizeX + 2, sizeY + 2);
-        return pathArea
-                .intersectsWith2D(objectArea);
+        return canReach(worldPoint, sizeX, sizeY, 3, 3);
     }
 
     /**
@@ -616,17 +608,7 @@ public class Rs2Walker {
      * @return
      */
     public static boolean canReach(WorldPoint worldPoint) {
-        if (ShortestPathPlugin.getPathfinderConfig().getTransports().isEmpty()) {
-            ShortestPathPlugin.getPathfinderConfig().refresh();
-        }
-        Pathfinder pathfinder = new Pathfinder(ShortestPathPlugin.getPathfinderConfig(), Rs2Player.getWorldLocation(), worldPoint);
-        pathfinder.run();
-        List<WorldPoint> path = pathfinder.getPath();
-        if (path.isEmpty() || path.get(path.size() - 1).getPlane() != worldPoint.getPlane()) return false;
-        WorldArea pathArea = new WorldArea(path.get(path.size() - 1), 2, 2);
-        WorldArea objectArea = new WorldArea(worldPoint, 2, 2);
-        return pathArea
-                .intersectsWith2D(objectArea);
+        return canReach(worldPoint, 2, 2, 2, 2);
     }
 
     /**
@@ -815,7 +797,7 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
 
         for (int offset = 0; offset <= 1; offset++) {
             int doorIdx = index + offset;
-            if (doorIdx < 0 || doorIdx >= path.size()) continue;
+            if (doorIdx >= path.size()) continue;
 
             WorldPoint rawDoorWp = path.get(doorIdx);
             WorldPoint doorWp = isInstance
@@ -841,7 +823,8 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
                 if (object == null) continue;
 
                 ObjectComposition comp = Rs2GameObject.convertToObjectComposition(object);
-                if (comp == null) continue;
+				// We include the name "null" here to ignore imposter objects
+                if (comp == null || comp.getName().equals("null")) continue;
 
                 String action = Arrays.stream(comp.getActions())
 					.filter(Objects::nonNull)
@@ -2251,4 +2234,25 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
                 return -1;
         }
     }
+
+	public static boolean isTeleportItem(int itemId) {
+		if (ShortestPathPlugin.getPathfinderConfig().getAllTransports().isEmpty()) {
+			ShortestPathPlugin.getPathfinderConfig().refresh();
+		}
+
+		Set<Integer> teleportItemIds = ShortestPathPlugin.getPathfinderConfig().getAllTransports().values()
+			.stream()
+			.flatMap(Set::stream)
+			.filter(t -> TransportType.isTeleport(t.getType()))
+			.map(Transport::getItemIdRequirements)
+			.flatMap(Set::stream)
+			.flatMap(Set::stream)
+			.collect(Collectors.toSet());
+
+		// Items that are not included in transports
+		teleportItemIds.add(ItemID.DRAMEN_STAFF);
+		teleportItemIds.add(ItemID.LUNAR_STAFF);
+
+		return teleportItemIds.contains(itemId);
+	}
 }
