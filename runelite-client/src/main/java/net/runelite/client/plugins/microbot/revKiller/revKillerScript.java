@@ -73,7 +73,7 @@ public class revKillerScript extends Script {
     private long howLongUntilHop = 0;
     public volatile boolean shouldFlee = false;
     private long startTime = System.currentTimeMillis();
-    public List<Rs2ItemModel> ourEquipmentForDeathWalking = new ArrayList<>();
+    public volatile List<Rs2ItemModel> ourEquipmentForDeathWalking = new ArrayList<>();
 
 
     public boolean run(revKillerConfig config) {
@@ -110,14 +110,14 @@ public class revKillerScript extends Script {
                     return;
                 }
 
-                if(ourEquipmentForDeathWalking.isEmpty()){
-                    ourEquipmentForDeathWalking = Rs2Equipment.items();
-                    Microbot.log("We'll be re-equipping: "+ourEquipmentForDeathWalking+" if we die.");
-                }
-
                 DidWeDie();
 
                 if(areWeEquipped()){
+
+                    if(ourEquipmentForDeathWalking.isEmpty()){
+                        ourEquipmentForDeathWalking = Rs2Equipment.items();
+                        Microbot.log("Equipped items saved.");
+                    }
 
                     if(Rs2Player.getWorldLocation().distanceTo(selectedWP)>12){
 
