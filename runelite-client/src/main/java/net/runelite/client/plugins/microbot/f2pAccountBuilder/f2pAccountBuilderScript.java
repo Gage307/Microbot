@@ -465,7 +465,7 @@ public class f2pAccountBuilderScript extends Script {
                             }
                         }
 
-                        if(Rs2Inventory.contains(mould) && Rs2Inventory.contains(gem) && Rs2Inventory.contains(bar)){
+                        if(Rs2Inventory.contains(mould) && Rs2Inventory.contains(gem) && Rs2Inventory.contains(bar) && !Rs2Inventory.contains(it->it!=null&&it.isNoted())){
                             closeTheBank();
 
                             GameObject furnace = Rs2GameObject.findObject("furnace", true, 10, false, chosenSpot);
@@ -489,7 +489,7 @@ public class f2pAccountBuilderScript extends Script {
                     }
 
                     if(craftingMaterial.equals("Leather")) {
-                        if (Rs2Inventory.contains(craftingMaterial) && Rs2Inventory.contains("Thread") && Rs2Inventory.contains("Needle")) {
+                        if (Rs2Inventory.contains(craftingMaterial) && Rs2Inventory.contains("Thread") && Rs2Inventory.contains("Needle") && !Rs2Inventory.contains(it->it!=null&&it.isNoted())) {
                             closeTheBank();
 
                             Rs2Inventory.combine("Needle", "Leather");
@@ -955,10 +955,9 @@ public class f2pAccountBuilderScript extends Script {
                                         }
                                     }
                                 }
-                                if (Rs2Inventory.contains("Silver ore")) {
-                                    // walk to the initial position (near furnace)
-                                    smeltTheBar(Bars.SILVER);
-                                }
+                            }
+                            if (Rs2Inventory.contains("Silver ore") && !Rs2Inventory.contains(it->it!=null&&it.isNoted())) {
+                                smeltTheBar(Bars.SILVER);
                             }
                         }
 
@@ -1012,10 +1011,9 @@ public class f2pAccountBuilderScript extends Script {
                                         }
                                     }
                                 }
-                                if ((Rs2Inventory.contains("Copper ore") && Rs2Inventory.contains("Tin ore"))) {
-                                    // walk to the initial position (near furnace)
-                                    smeltTheBar(Bars.BRONZE);
-                                }
+                            }
+                            if ((Rs2Inventory.contains("Copper ore") && Rs2Inventory.contains("Tin ore")) && !Rs2Inventory.contains(it->it!=null&&it.isNoted())) {
+                                smeltTheBar(Bars.BRONZE);
                             }
 
                         }
@@ -1109,7 +1107,7 @@ public class f2pAccountBuilderScript extends Script {
                                 }
                             }
                         }
-                        if(Rs2Inventory.contains(logsToBurn) && Rs2Inventory.contains(ItemID.TINDERBOX)){
+                        if(Rs2Inventory.contains(logsToBurn) && Rs2Inventory.contains(ItemID.TINDERBOX) && !Rs2Inventory.contains(it->it!=null&&it.isNoted())){
                             closeTheBank();
 
                             GameObject fire = Rs2GameObject.getGameObject(it->it!=null&&it.getId()==ObjectID.FIRE&&it.getWorldLocation().equals(Rs2Player.getWorldLocation()));
