@@ -1046,6 +1046,7 @@ public class f2pAccountBuilderScript extends Script {
         if (furnace != null) {
             Rs2GameObject.interact(furnace, "smelt");
             Rs2Widget.sleepUntilHasWidgetText("What would you like to smelt?", 270, 5, false, 5000);
+            sleep(250,1000);
             Rs2Widget.clickWidget(bar.getName());
             Rs2Widget.sleepUntilHasNotWidgetText("What would you like to smelt?", 270, 5, false, 5000);
         }
