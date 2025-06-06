@@ -565,6 +565,7 @@ public class f2pAccountBuilderScript extends Script {
                 shouldCook = false;
                 shouldThink = false;
                 chosenSpot = null;
+                weChangeActivity = true;
                 return;
             }
 
