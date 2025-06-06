@@ -2,7 +2,6 @@ package net.runelite.client.plugins.microbot.f2pAccountBuilder;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.Skill;
-import net.runelite.api.TileObject;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.ObjectID;
@@ -11,7 +10,6 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.smelting.enums.Bars;
-import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
@@ -955,10 +953,10 @@ public class f2pAccountBuilderScript extends Script {
                                             openGEandBuyItem("Silver ore", Rs2Random.between(100,200));
                                         }
                                     }
-                                    if (Rs2Inventory.contains("Silver ore")) {
-                                        // walk to the initial position (near furnace)
-                                        smeltTheBar(Bars.SILVER);
-                                    }
+                                }
+                                if (Rs2Inventory.contains("Silver ore")) {
+                                    // walk to the initial position (near furnace)
+                                    smeltTheBar(Bars.SILVER);
                                 }
                             }
                         }
@@ -1012,10 +1010,10 @@ public class f2pAccountBuilderScript extends Script {
                                             outOfOre();
                                         }
                                     }
-                                    if ((Rs2Inventory.contains("Copper ore") && Rs2Inventory.contains("Tin ore"))) {
-                                        // walk to the initial position (near furnace)
-                                        smeltTheBar(Bars.BRONZE);
-                                    }
+                                }
+                                if ((Rs2Inventory.contains("Copper ore") && Rs2Inventory.contains("Tin ore"))) {
+                                    // walk to the initial position (near furnace)
+                                    smeltTheBar(Bars.BRONZE);
                                 }
                             }
 
@@ -1051,8 +1049,6 @@ public class f2pAccountBuilderScript extends Script {
             Rs2Widget.sleepUntilHasWidgetText("What would you like to smelt?", 270, 5, false, 5000);
             Rs2Widget.clickWidget(bar.getName());
             Rs2Widget.sleepUntilHasNotWidgetText("What would you like to smelt?", 270, 5, false, 5000);
-            Rs2Antiban.actionCooldown();
-            Rs2Antiban.takeMicroBreakByChance();
         }
 
         sleepThroughMulipleAnimations();
