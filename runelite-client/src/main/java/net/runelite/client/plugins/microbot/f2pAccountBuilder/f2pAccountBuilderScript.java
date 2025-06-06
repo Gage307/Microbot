@@ -209,7 +209,7 @@ public class f2pAccountBuilderScript extends Script {
                         }
                         Rs2Bank.depositAll();
                         sleepUntil(() -> Rs2Inventory.isEmpty(), Rs2Random.between(2000, 5000));
-                        sleep(0, 500);
+                        sleep(250,1000);
                     }
                 }
                 if(Rs2Inventory.isEmpty()){
@@ -679,7 +679,7 @@ public class f2pAccountBuilderScript extends Script {
                                if(!Rs2Player.isAnimating()){
                                    if(Rs2GameObject.interact(ourTree, "Chop down")){
                                        sleepUntil(()-> !Rs2Player.isAnimating(), Rs2Random.between(20000,50000));
-                                       sleep(0,500);
+                                       sleep(250,1000);
                                    }
                                }
                             }
@@ -758,7 +758,7 @@ public class f2pAccountBuilderScript extends Script {
                                 if(!Rs2Player.isAnimating()){
                                     if(Rs2GameObject.interact(ourRock, "Mine")){
                                         sleepUntil(()-> !Rs2Player.isAnimating() || ourRock == null, Rs2Random.between(20000,50000));
-                                        sleep(0,500);
+                                        sleep(250,1000);
                                     }
                                 }
                             }
@@ -872,7 +872,7 @@ public class f2pAccountBuilderScript extends Script {
                                 if(!Rs2Player.isAnimating()){
                                     if(Rs2Npc.interact(ourFishingSpot, fishingAction)){
                                         sleepUntil(()-> !Rs2Player.isAnimating() || ourFishingSpot == null, Rs2Random.between(20000,50000));
-                                        sleep(0,500);
+                                        sleep(250,1000);
                                     }
                                 }
                             }
