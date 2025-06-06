@@ -95,7 +95,7 @@ public class f2pAccountBuilderScript extends Script {
     }
 
     public void handleBreaks(){
-        if(BreakHandlerScript.breakIn != 0 && BreakHandlerScript.isBreakActive()){
+        if(BreakHandlerScript.breakDuration != 0 && BreakHandlerScript.isBreakActive()){
             return;
         }
         if(BreakHandlerScript.breakIn != 0 && BreakHandlerScript.breakIn < 10) {
@@ -1162,6 +1162,9 @@ public class f2pAccountBuilderScript extends Script {
                 break;
             }
             if(!Microbot.isLoggedIn()){
+                break;
+            }
+            if(BreakHandlerScript.breakDuration != 0 && BreakHandlerScript.isBreakActive()){
                 break;
             }
             if (Rs2Player.isAnimating()) {
