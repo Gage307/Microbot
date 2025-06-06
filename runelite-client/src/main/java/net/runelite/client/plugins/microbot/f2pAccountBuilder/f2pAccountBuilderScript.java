@@ -9,6 +9,7 @@ import net.runelite.api.gameval.ObjectID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.smelting.enums.Bars;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -66,6 +67,7 @@ public class f2pAccountBuilderScript extends Script {
 
                 thinkBasedOnTime(); // Change our activity if it's been X amount of time.
 
+                handleBreaks();
 
                 //Skilling
                 woodCutting();
@@ -90,6 +92,19 @@ public class f2pAccountBuilderScript extends Script {
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
         return true;
+    }
+
+    public void handleBreaks(){
+        if(BreakHandlerScript.breakIn != 0 && BreakHandlerScript.isBreakActive()){
+            return;
+        }
+        if(BreakHandlerScript.breakIn != 0 && BreakHandlerScript.breakIn < 10) {
+            if (Microbot.loggedIn) {
+                Rs2Player.logout();
+                sleepUntil(() -> !Microbot.loggedIn, Rs2Random.between(2000, 5000));
+            }
+            sleepUntil(() -> BreakHandlerScript.isBreakActive(), Rs2Random.between(30000, 60000));
+        }
     }
 
     public void thinkVoid(){
@@ -191,6 +206,9 @@ public class f2pAccountBuilderScript extends Script {
                         if (!super.isRunning()) {
                             break;
                         }
+                        if(!Microbot.isLoggedIn()){
+                            break;
+                        }
                         Rs2Bank.depositAll();
                         sleepUntil(() -> Rs2Inventory.isEmpty(), Rs2Random.between(2000, 5000));
                         sleep(0, 500);
@@ -269,6 +287,11 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(Rs2GrandExchange.isOpen()){
 
+            if(Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()){
+                Rs2GrandExchange.collectToInventory();
+                sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
+            }
+
             Rs2ItemManager itemManager = new Rs2ItemManager();
             int itemsID = itemManager.getItemId(item); // Get our Items ID
             if(item.equals("Leather")){itemsID = ItemID.LEATHER;} //Needed because getItemID returns the wrong itemID for Leather
@@ -287,7 +310,7 @@ public class f2pAccountBuilderScript extends Script {
             }
 
             if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 30)){
-                sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(2000,5000));
+                sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
             }
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers()){
@@ -299,7 +322,8 @@ public class f2pAccountBuilderScript extends Script {
 
     public void sellItems(){
         if(shouldSellItems){
-            String[] items = {"Bronze bar", "Silver bar", "Diamond necklace", "Sapphire necklace", "Emerald necklace", "Ruby necklace", "Cooked chicken"};
+            String[] items = {"Bronze bar", "Silver bar", "Diamond necklace", "Sapphire necklace", "Emerald necklace", "Ruby necklace", "Cooked chicken", "Leather", "Sapphire",
+            "Emerald", "Ruby", "Diamond", "Raw chicken"};
 
             if(!Rs2Bank.isOpen()){
                 walkToBankAndOpenIt();
@@ -333,10 +357,10 @@ public class f2pAccountBuilderScript extends Script {
                     for (String item : items) {
                         if (Rs2Inventory.get(item) != null) {
                             Rs2GrandExchange.sellItemUnder5Percent(item);
-                            sleepUntil(() -> Rs2GrandExchange.hasFinishedSellingOffers(), Rs2Random.between(2000, 5000));
+                            sleepUntil(() -> Rs2GrandExchange.hasFinishedSellingOffers(), Rs2Random.between(20000,60000));
                         }
                     }
-                    if (Rs2GrandExchange.hasFinishedSellingOffers()) {
+                    if (Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()) {
                         Rs2GrandExchange.collectToBank();
                     }
                 }
@@ -420,6 +444,9 @@ public class f2pAccountBuilderScript extends Script {
 
                             while(Rs2Inventory.count(mould) < 1 || Rs2Inventory.count(gem) < 13 || Rs2Inventory.count(bar) < 13){
                                 if(!super.isRunning()){break;}
+                                if(!Microbot.isLoggedIn()){
+                                    break;
+                                }
                                 if(Rs2Inventory.isFull()){Rs2Bank.depositAll();}
 
                                 if(!Rs2Inventory.contains(mould) && Rs2Random.between(0,100) < 60){
@@ -552,7 +579,7 @@ public class f2pAccountBuilderScript extends Script {
                     if(Rs2Player.getWorldLocation().distanceTo(chosenSpot) > 12){
                         Rs2Walker.walkTo(chosenSpot);
                     } else {
-                        if(Rs2Inventory.contains(whatToCook)){
+                        if(Rs2Inventory.contains(whatToCook) && !Rs2Inventory.get(whatToCook).isNoted()){
                             closeTheBank();
 
                             GameObject range = Rs2GameObject.getGameObject("Range");
@@ -568,13 +595,16 @@ public class f2pAccountBuilderScript extends Script {
                                 sleepThroughMulipleAnimations();
                             }
                         }
-                        if(!Rs2Inventory.contains(whatToCook)){
+                        if(!Rs2Inventory.contains(whatToCook) || Rs2Inventory.get(whatToCook).isNoted() || weChangeActivity){
                             walkToBankAndOpenIt();
 
                             if (Rs2Bank.isOpen()) {
-                                if(Rs2Inventory.contains("Cooked chicken") || !Rs2Inventory.onlyContains("Raw chicken")){
+                                if(Rs2Inventory.contains("Cooked chicken") || weChangeActivity || !Rs2Inventory.onlyContains("Raw chicken") || Rs2Inventory.contains(it->it!=null&&it.isNoted())){
                                     Rs2Bank.depositAll();
                                     sleepUntil(()->!Rs2Inventory.contains("Cooked chicken"), Rs2Random.between(3000, 6000));
+                                    if(Rs2Inventory.isEmpty() && weChangeActivity){
+                                        weChangeActivity = false;
+                                    }
                                 }
                                 if(!Rs2Inventory.contains(whatToCook) && !Rs2Inventory.isFull()){
                                     if(Rs2Bank.getBankItem(whatToCook, true) != null) {
@@ -692,9 +722,11 @@ public class f2pAccountBuilderScript extends Script {
                         chosenSpot = spot1;
                     } else {
                         chosenSpot = spot2;
-                        if(Rs2Player.getCombatLevel() < 30){
-                            Microbot.log("We can't mine at Al Kharid until we get 30 combat");
-                            chosenSpot = spot1;
+                        if(rockToMine.equals("Iron rocks")) {
+                            if (Rs2Player.getCombatLevel() < 30) {
+                                Microbot.log("We can't mine at Al Kharid until we get 30 combat");
+                                chosenSpot = spot1;
+                            }
                         }
                     }
 
@@ -995,25 +1027,25 @@ public class f2pAccountBuilderScript extends Script {
     }
 
     public void outOfOre(){
-        //we need to buy copper ore
+        //we need to buy
+        int amt = Rs2Random.between(100,200);
         if (Rs2Bank.getBankItem("Tin ore") == null || Rs2Bank.getBankItem("Tin ore").getQuantity() < 14) {
-            openGEandBuyItem("Tin ore", Rs2Random.between(100,200));
+            openGEandBuyItem("Tin ore", amt);
         }
         if (Rs2Bank.getBankItem("Copper ore") == null || Rs2Bank.getBankItem("Copper ore").getQuantity() < 14) {
-            openGEandBuyItem("Copper ore", Rs2Random.between(100,200));
+            openGEandBuyItem("Copper ore", amt);
         }
     }
 
     public void smeltTheBar(Bars bar){
-        // walk to the initial position (near furnace)
-        if (chosenSpot.distanceTo(Rs2Player.getWorldLocation()) > 4) {
+        // interact with the furnace until the smelting dialogue opens in chat, click the selected bar icon
+        GameObject furnace = Rs2GameObject.findObject("furnace", true, 10, false, chosenSpot);
+        if(furnace == null){
             if (Rs2Bank.isOpen())
                 Rs2Bank.closeBank();
             Rs2Walker.walkTo(chosenSpot, 4);
+            return;
         }
-
-        // interact with the furnace until the smelting dialogue opens in chat, click the selected bar icon
-        GameObject furnace = Rs2GameObject.findObject("furnace", true, 10, false, chosenSpot);
         if (furnace != null) {
             Rs2GameObject.interact(furnace, "smelt");
             Rs2Widget.sleepUntilHasWidgetText("What would you like to smelt?", 270, 5, false, 5000);
@@ -1127,6 +1159,9 @@ public class f2pAccountBuilderScript extends Script {
         boolean stillAnimating = true;
         while (stillAnimating) {
             if (!super.isRunning()) {
+                break;
+            }
+            if(!Microbot.isLoggedIn()){
                 break;
             }
             if (Rs2Player.isAnimating()) {

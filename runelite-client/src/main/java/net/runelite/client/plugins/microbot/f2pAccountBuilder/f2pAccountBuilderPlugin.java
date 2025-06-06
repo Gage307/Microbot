@@ -24,9 +24,9 @@ import java.awt.*;
 @Slf4j
 public class f2pAccountBuilderPlugin extends Plugin {
     @Inject
-    private net.runelite.client.plugins.microbot.f2pAccountBuilder.f2pAccountBuilderConfig config;
+    private f2pAccountBuilderConfig config;
     @Provides
-    net.runelite.client.plugins.microbot.f2pAccountBuilder.f2pAccountBuilderConfig provideConfig(ConfigManager configManager) {
+    f2pAccountBuilderConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(f2pAccountBuilderConfig.class);
     }
 
