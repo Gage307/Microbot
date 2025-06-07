@@ -307,9 +307,18 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
 
-            if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 30)){
-                sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
+            if(howMany <= 2){
+                if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 60)){
+                    sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
+                }
             }
+
+            if(howMany > 2){
+                if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 30)){
+                    sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
+                }
+            }
+
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers()){
                 Rs2GrandExchange.collectToInventory();
