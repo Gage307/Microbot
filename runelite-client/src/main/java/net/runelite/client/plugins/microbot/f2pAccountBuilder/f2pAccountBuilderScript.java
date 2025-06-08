@@ -1,8 +1,6 @@
 package net.runelite.client.plugins.microbot.f2pAccountBuilder;
 
-import net.runelite.api.GameObject;
-import net.runelite.api.Skill;
-import net.runelite.api.WorldType;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.ObjectID;
@@ -187,10 +185,7 @@ public class f2pAccountBuilderScript extends Script {
     }
 
     public void getBuyAndEquipP2PTeles(){
-        int ourWorld = Rs2Player.getWorld();
-        World world = Microbot.getWorldService().getWorlds().findWorld(ourWorld);
-        boolean weAreMembers = world != null && world.getTypes().contains(WorldType.MEMBERS);
-        if(weAreMembers){
+        if(Rs2Player.isInMemberWorld()){
             if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Amulet of glory("))
                     || !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Ring of wealth ("))
                         || !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Combat bracelet("))){
@@ -773,16 +768,18 @@ public class f2pAccountBuilderScript extends Script {
                         } else {
                             closeTheBank();
 
-                            GameObject ourTree = Rs2GameObject.getGameObject(treeToChop, true);
+                            GameObject ourTree;
+                            ourTree = Rs2GameObject.getGameObject(treeToChop, true);
 
-                            if(Rs2GameObject.getGameObject(ourTree.getId(), ourTree.getWorldLocation()) == null){
+                            if(ourTree == null){
                                 Microbot.log("Tree is null");
                                 return;
                             }
 
                             if(!Rs2Player.isAnimating()){
+                                ourTree = Rs2GameObject.getGameObject(treeToChop, true);
                                 if(Rs2GameObject.interact(ourTree, "Chop down")){
-                                    sleepUntil(()-> !Rs2Player.isAnimating() && Rs2GameObject.getGameObject(ourTree.getId(), ourTree.getWorldLocation()) == null, Rs2Random.between(20000,50000));
+                                    sleepUntil(()-> !Rs2Player.isAnimating(), Rs2Random.between(20000,50000));
                                     sleepHumanReaction();
                                 }
                             }
