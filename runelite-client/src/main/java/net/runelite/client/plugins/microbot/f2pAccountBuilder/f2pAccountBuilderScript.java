@@ -192,6 +192,8 @@ public class f2pAccountBuilderScript extends Script {
                         || !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Combat bracelet("))){
                 Microbot.log("We need our teleports");
 
+                this.weChangeActivity = true;
+
                 if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Amulet of glory("))){
                     goToBankandGrabAnItem("Amulet of glory(6)", 1);
                 }
@@ -281,7 +283,7 @@ public class f2pAccountBuilderScript extends Script {
 
     public void goToBankandGrabAnItem(String item, int howMany){
         if(!Rs2Bank.isOpen()){
-            Rs2Bank.walkToBankAndUseBank();
+            this.walkToBankAndOpenIt();
             sleepUntil(()-> Rs2Bank.isOpen(), Rs2Random.between(2000,5000));
             sleepHumanReaction();
         }
@@ -325,6 +327,13 @@ public class f2pAccountBuilderScript extends Script {
         if (!Rs2Bank.isOpen()) {
             GameObject objBank = Rs2GameObject.getGameObject(it->it!=null&&it.getId() == ObjectID.BANKBOOTH &&it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15);
             NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
+
+            if(objBank == null && npcBank == null){
+                if (Rs2Bank.walkToBank()) {
+                    Microbot.log("Walking to the bank");
+                }
+            }
+
             if(objBank!=null){
                 if(Rs2Camera.isTileOnScreen(objBank)){
                     if(Rs2GameObject.interact(objBank, "Bank")){
@@ -349,11 +358,6 @@ public class f2pAccountBuilderScript extends Script {
                         if (Rs2Bank.walkToBank()) {
                             Microbot.log("Walking to the bank");
                         }
-                    }
-                } else {
-                    // If both npc and bankbooth are null
-                    if (Rs2Bank.walkToBank()) {
-                        Microbot.log("Walking to the bank");
                     }
                 }
             }
@@ -707,6 +711,7 @@ public class f2pAccountBuilderScript extends Script {
                                 sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("like to cook?", null, false) != null);
                                 sleepHumanReaction();
                                 Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                                sleepHumanReaction();
                                 sleepThroughMulipleAnimations();
                             }
                         }
@@ -1312,6 +1317,7 @@ public class f2pAccountBuilderScript extends Script {
                 if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
                     break;
                 }
+                sleepHumanReaction();
             }
         } else {
             int timeoutMs = Rs2Random.between(1500, 3000);
@@ -1325,6 +1331,7 @@ public class f2pAccountBuilderScript extends Script {
                 if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
                     break;
                 }
+                sleepHumanReaction();
             }
         }
     }
