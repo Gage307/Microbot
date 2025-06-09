@@ -327,6 +327,8 @@ public class f2pAccountBuilderScript extends Script {
         if (!Rs2Bank.isOpen()) {
             GameObject objBank = Rs2GameObject.getGameObject(it->it!=null&&it.getId() == ObjectID.BANKBOOTH &&it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15);
             NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
+            Rs2NpcModel npcModel = Rs2Npc.getNearestNpcWithAction("Bank");
+
 
             if(objBank == null && npcBank == null){
                 if (Rs2Bank.walkToBank()) {
@@ -335,7 +337,7 @@ public class f2pAccountBuilderScript extends Script {
             }
 
             if(objBank!=null){
-                if(Rs2Camera.isTileOnScreen(objBank)){
+                if(Rs2Camera.isTileOnScreen(objBank) && Rs2GameObject.canReach(objBank.getWorldLocation())){
                     if(Rs2GameObject.interact(objBank, "Bank")){
                         sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
                         sleepHumanReaction();
@@ -348,7 +350,8 @@ public class f2pAccountBuilderScript extends Script {
                 }
             } else {
                 if(npcBank!=null){
-                    if(Rs2UiHelper.isRectangleWithinViewport(npcBank.getConvexHull().getBounds())){
+                    if(Rs2UiHelper.isRectangleWithinViewport(npcBank.getConvexHull().getBounds()) && Rs2Npc.hasLineOfSight(npcModel)
+                            || Rs2Player.getWorldLocation().distanceTo(BankLocation.GRAND_EXCHANGE.getWorldPoint()) < 12){
                         if(Rs2Npc.interact(npcBank.getId(), "Bank")){
                             sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
                             sleepHumanReaction();
@@ -806,6 +809,12 @@ public class f2pAccountBuilderScript extends Script {
 
                             if(ourTree == null){
                                 Microbot.log("Tree is null");
+                                return;
+                            }
+
+                            if(ourTree.getWorldLocation().distanceTo(chosenSpot) >= 12){
+                                Microbot.log("Tree is too far from our spot");
+                                Rs2Walker.walkTo(chosenSpot);
                                 return;
                             }
 
