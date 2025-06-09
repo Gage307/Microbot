@@ -327,7 +327,7 @@ public class f2pAccountBuilderScript extends Script {
             NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
             if(objBank!=null){
                 if(Rs2Camera.isTileOnScreen(objBank)){
-                    if(Rs2GameObject.interact(objBank)){
+                    if(Rs2GameObject.interact(objBank, "Bank")){
                         sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
                         sleepHumanReaction();
                         return;
@@ -340,7 +340,7 @@ public class f2pAccountBuilderScript extends Script {
             } else {
                 if(npcBank!=null){
                     if(Rs2UiHelper.isRectangleWithinViewport(npcBank.getConvexHull().getBounds())){
-                        if(Rs2Npc.interact(npcBank.getId())){
+                        if(Rs2Npc.interact(npcBank.getId(), "Bank")){
                             sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
                             sleepHumanReaction();
                             return;
