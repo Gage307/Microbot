@@ -288,6 +288,8 @@ public class f2pAccountBuilderScript extends Script {
             sleepHumanReaction();
         }
         if(Rs2Bank.isOpen()){
+            chosenSpot = null;
+
             if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
 
             depositAllIfWeChangeActivity();
@@ -382,7 +384,8 @@ public class f2pAccountBuilderScript extends Script {
             sleepHumanReaction();
         }
         if(Rs2GrandExchange.isOpen()){
-
+            chosenSpot = null;
+            
             if(Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()){
                 Rs2GrandExchange.collectToInventory();
                 sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
