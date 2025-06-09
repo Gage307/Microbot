@@ -801,9 +801,10 @@ public class f2pAccountBuilderScript extends Script {
                                 return;
                             }
 
-                            if(!Rs2Player.isAnimating()){
+                            if(!Rs2Player.isAnimating() && !Rs2Player.isMoving()){
                                 ourTree = Rs2GameObject.getGameObject(treeToChop, true);
                                 if(Rs2GameObject.interact(ourTree, "Chop down")){
+                                    sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(7000,15000));
                                     sleepUntil(()-> !Rs2Player.isAnimating(), Rs2Random.between(20000,50000));
                                     sleepHumanReaction();
                                 }
@@ -1299,25 +1300,31 @@ public class f2pAccountBuilderScript extends Script {
     //skilling
 
     public void sleepThroughMulipleAnimations(){
-        boolean stillAnimating = true;
-        while (stillAnimating) {
-            if (!super.isRunning()) {
-                break;
+        if(!this.shouldFiremake) {
+            int timeoutMs = Rs2Random.between(3000, 5000);
+            while (Rs2Player.isAnimating(timeoutMs)) {
+                if (!super.isRunning()) {
+                    break;
+                }
+                if (!Microbot.isLoggedIn()) {
+                    break;
+                }
+                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
+                    break;
+                }
             }
-            if(!Microbot.isLoggedIn()){
-                break;
-            }
-            if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.isBreakActive()){
-                break;
-            }
-            if (Rs2Player.isAnimating()) {
-                sleepUntil(() -> !Rs2Player.isAnimating() || !super.isRunning(), Rs2Random.between(3000, 5000));
-            }
-            if (!Rs2Player.isAnimating()) {
-                sleepUntil(() -> Rs2Player.isAnimating() || !super.isRunning(), Rs2Random.between(3000, 5000));
-            }
-            if (!Rs2Player.isAnimating() || !super.isRunning()) {
-                stillAnimating = false;
+        } else {
+            int timeoutMs = Rs2Random.between(1500, 3000);
+            while (Rs2Player.isAnimating(timeoutMs)) {
+                if (!super.isRunning()) {
+                    break;
+                }
+                if (!Microbot.isLoggedIn()) {
+                    break;
+                }
+                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
+                    break;
+                }
             }
         }
     }
