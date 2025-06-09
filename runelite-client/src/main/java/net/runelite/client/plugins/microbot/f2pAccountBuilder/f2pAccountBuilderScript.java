@@ -1277,23 +1277,26 @@ public class f2pAccountBuilderScript extends Script {
                                 } else {
                                     Rs2Walker.walkCanvas(chosenSpot);
                                 }
+                                return;
                             }
 
                             GameObject geBooth = Rs2GameObject.getGameObject("Grand Exchange booth", true);
-                            if(geBooth.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 2){
-                                Microbot.log("We're too close to the GE, moving.");
-                                if(Rs2Player.distanceTo(chosenSpot) > 4){
-                                    Rs2Walker.walkTo(chosenSpot);
-                                } else {
-                                    Rs2Walker.walkCanvas(chosenSpot);
+                            if(geBooth != null) {
+                                if (geBooth.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 2) {
+                                    Microbot.log("We're too close to the GE, moving.");
+                                    if (Rs2Player.distanceTo(chosenSpot) > 4) {
+                                        Rs2Walker.walkTo(chosenSpot);
+                                    } else {
+                                        Rs2Walker.walkCanvas(chosenSpot);
+                                    }
+                                    return;
                                 }
-                            }
+                            } else { Microbot.log("Couldn't find GE booth"); }
 
                             Rs2Inventory.use("tinderbox");
-                            sleepUntil(Rs2Inventory::isItemSelected);
+                            sleepHumanReaction();
                             int id = Rs2Inventory.get(logsToBurn).getId();
                             Rs2Inventory.useLast(id);
-
                             sleepThroughMulipleAnimations();
                         }
                     }
@@ -1305,6 +1308,9 @@ public class f2pAccountBuilderScript extends Script {
     //skilling
 
     public void sleepThroughMulipleAnimations(){
+        if(!Rs2Player.isAnimating()){
+            sleepUntil(()-> Rs2Player.isAnimating(), Rs2Random.between(1000,3000));
+        }
         if(!this.shouldFiremake) {
             int timeoutMs = Rs2Random.between(3000, 5000);
             while (Rs2Player.isAnimating(timeoutMs)) {
