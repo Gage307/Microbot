@@ -362,6 +362,9 @@ public class f2pAccountBuilderScript extends Script {
                 }
             }
         }
+        if(Rs2Bank.isOpen()){
+            if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
+        }
     }
 
     public void openGEandBuyItem(String item, int howMany){
@@ -1288,7 +1291,7 @@ public class f2pAccountBuilderScript extends Script {
                                 return;
                             }
 
-                            if (banker.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 3 || geClerk.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 3) {
+                            if (banker.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 2 || geClerk.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 2) {
                                 Microbot.log("We're too close to the GE, moving.");
                                 if (Rs2Player.distanceTo(chosenSpot) > 4) {
                                     Rs2Walker.walkTo(chosenSpot);
