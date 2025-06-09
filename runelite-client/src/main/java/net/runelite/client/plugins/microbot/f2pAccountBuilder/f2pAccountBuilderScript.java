@@ -19,6 +19,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
+import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -322,13 +323,37 @@ public class f2pAccountBuilderScript extends Script {
 
     public void walkToBankAndOpenIt(){
         if (!Rs2Bank.isOpen()) {
-            if (Rs2Bank.walkToBank()) {
-                if (Rs2GameObject.interact(Rs2GameObject.getGameObject(it->it!=null&&it.getId() == ObjectID.BANKBOOTH &&it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15), "Bank") || Rs2Npc.interact(Rs2Npc.getNearestNpcWithAction("Bank"), "Bank")) {
-                    sleepUntil(Rs2Bank::isOpen, Rs2Random.between(3000, 6000));
-                    sleepHumanReaction();
-                    if(Rs2Bank.isOpen()){
-                        //Count our coins
-                        if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
+            GameObject objBank = Rs2GameObject.getGameObject(it->it!=null&&it.getId() == ObjectID.BANKBOOTH &&it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15);
+            NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
+            if(objBank!=null){
+                if(Rs2Camera.isTileOnScreen(objBank)){
+                    if(Rs2GameObject.interact(objBank)){
+                        sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
+                        sleepHumanReaction();
+                        return;
+                    }
+                } else {
+                    if (Rs2Bank.walkToBank()) {
+                        Microbot.log("Walking to the bank");
+                    }
+                }
+            } else {
+                if(npcBank!=null){
+                    if(Rs2UiHelper.isRectangleWithinViewport(npcBank.getConvexHull().getBounds())){
+                        if(Rs2Npc.interact(npcBank.getId())){
+                            sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
+                            sleepHumanReaction();
+                            return;
+                        }
+                    } else {
+                        if (Rs2Bank.walkToBank()) {
+                            Microbot.log("Walking to the bank");
+                        }
+                    }
+                } else {
+                    // If both npc and bankbooth are null
+                    if (Rs2Bank.walkToBank()) {
+                        Microbot.log("Walking to the bank");
                     }
                 }
             }
@@ -517,7 +542,7 @@ public class f2pAccountBuilderScript extends Script {
                             }
 
                             int amt = Rs2Random.between(100,200);
-                            if(Rs2Bank.getBankItem(gem) == null || Rs2Bank.getBankItem(bar) == null || Rs2Bank.getBankItem(gem).getQuantity() < 13 ||  Rs2Bank.getBankItem(bar).getQuantity() < 13){
+                            if(Rs2Bank.getBankItem(gem, true) == null || Rs2Bank.getBankItem(bar, true) == null || Rs2Bank.getBankItem(gem, true).getQuantity() < 13 ||  Rs2Bank.getBankItem(bar, true).getQuantity() < 13){
                                 goToBankandGrabAnItem(gem, amt);
                                 goToBankandGrabAnItem(bar, amt);
                                 return;
