@@ -1280,18 +1280,23 @@ public class f2pAccountBuilderScript extends Script {
                                 return;
                             }
 
-                            GameObject geBooth = Rs2GameObject.getGameObject("Grand Exchange booth", true);
-                            if(geBooth != null) {
-                                if (geBooth.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 2) {
-                                    Microbot.log("We're too close to the GE, moving.");
-                                    if (Rs2Player.distanceTo(chosenSpot) > 4) {
-                                        Rs2Walker.walkTo(chosenSpot);
-                                    } else {
-                                        Rs2Walker.walkCanvas(chosenSpot);
-                                    }
-                                    return;
+                            NPC banker = Rs2Npc.getNearestNpcWithAction("Bank");
+                            NPC geClerk = Rs2Npc.getNearestNpcWithAction("Exchange");
+                            if(banker == null || geClerk == null){
+                                Microbot.log("Couldn't find GE Clerk or Banker, walking to the GE");
+                                Rs2Walker.walkTo(BankLocation.GRAND_EXCHANGE.getWorldPoint());
+                                return;
+                            }
+
+                            if (banker.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 3 || geClerk.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) <= 3) {
+                                Microbot.log("We're too close to the GE, moving.");
+                                if (Rs2Player.distanceTo(chosenSpot) > 4) {
+                                    Rs2Walker.walkTo(chosenSpot);
+                                } else {
+                                    Rs2Walker.walkCanvas(chosenSpot);
                                 }
-                            } else { Microbot.log("Couldn't find GE booth"); }
+                                return;
+                            }
 
                             Rs2Inventory.use("tinderbox");
                             sleepHumanReaction();
@@ -1313,7 +1318,7 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(!this.shouldFiremake) {
             int timeoutMs = Rs2Random.between(3000, 5000);
-            while (Rs2Player.isAnimating(timeoutMs)) {
+            while (Rs2Player.isAnimating() || Rs2Player.isAnimating(timeoutMs)) {
                 if (!super.isRunning()) {
                     break;
                 }
@@ -1327,7 +1332,7 @@ public class f2pAccountBuilderScript extends Script {
             }
         } else {
             int timeoutMs = Rs2Random.between(1500, 3000);
-            while (Rs2Player.isAnimating(timeoutMs)) {
+            while (Rs2Player.isAnimating() || Rs2Player.isAnimating(timeoutMs)) {
                 if (!super.isRunning()) {
                     break;
                 }
