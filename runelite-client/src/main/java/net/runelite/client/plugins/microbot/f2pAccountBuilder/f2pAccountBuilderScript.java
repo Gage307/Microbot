@@ -339,7 +339,7 @@ public class f2pAccountBuilderScript extends Script {
             }
 
             if(objBank!=null){
-                if(Rs2Camera.isTileOnScreen(objBank) && Rs2GameObject.canReach(objBank.getWorldLocation())){
+                if(Rs2Camera.isTileOnScreen(objBank) && Rs2GameObject.hasLineOfSight(objBank)){
                     if(Rs2GameObject.interact(objBank, "Bank")){
                         sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
                         sleepHumanReaction();
