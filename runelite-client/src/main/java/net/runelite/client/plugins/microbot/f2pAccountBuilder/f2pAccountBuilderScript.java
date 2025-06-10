@@ -325,54 +325,27 @@ public class f2pAccountBuilderScript extends Script {
         }
     }
 
-    public void walkToBankAndOpenIt(){
+    public void walkToBankAndOpenIt() {
         if (!Rs2Bank.isOpen()) {
-            GameObject objBank = Rs2GameObject.getGameObject(it->it!=null && it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15 && it.getId() == ObjectID.BANKBOOTH || it.getId() == 10583 || it.getId() == 24101 || it.getId() == 25808);
-            NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
-            Rs2NpcModel npcModel = Rs2Npc.getNearestNpcWithAction("Bank");
 
+            if (Rs2Bank.walkToBank()) {
+                Microbot.log("Walking to the bank");
+            }
 
-            if(objBank == null && npcBank == null){
-                if (Rs2Bank.walkToBank()) {
-                    Microbot.log("Walking to the bank");
+            while(!Rs2Bank.isOpen()) {
+                if(!super.isRunning()){break;}
+                if (Rs2Bank.openBank()) {
+                    Microbot.log("We opened the bank");
+                    sleepUntil(()-> Rs2Bank.isOpen(), Rs2Random.between(10000,15000));
+                    sleepHumanReaction();
                 }
             }
 
-            objBank = Rs2GameObject.getGameObject(it->it!=null && it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15 && it.getId() == ObjectID.BANKBOOTH || it.getId() == 10583 || it.getId() == 24101 || it.getId() == 25808);
-            npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
-            npcModel = Rs2Npc.getNearestNpcWithAction("Bank");
-
-            if(objBank!=null){
-                if(Rs2Camera.isTileOnScreen(objBank) && Rs2GameObject.hasLineOfSight(objBank)){
-                    if(Rs2GameObject.interact(objBank, "Bank")){
-                        sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
-                        sleepHumanReaction();
-                        return;
-                    }
-                } else {
-                    if (Rs2Bank.walkToBank()) {
-                        Microbot.log("Walking to the bank");
-                    }
-                }
-            } else {
-                if(npcBank!=null){
-                    if(Rs2UiHelper.isRectangleWithinViewport(npcBank.getConvexHull().getBounds()) && Rs2Npc.hasLineOfSight(npcModel)
-                            || Rs2Player.getWorldLocation().distanceTo(BankLocation.GRAND_EXCHANGE.getWorldPoint()) < 12){
-                        if(Rs2Npc.interact(npcBank.getId(), "Bank")){
-                            sleepUntil(Rs2Bank::isOpen, Rs2Random.between(6000, 12000));
-                            sleepHumanReaction();
-                            return;
-                        }
-                    } else {
-                        if (Rs2Bank.walkToBank()) {
-                            Microbot.log("Walking to the bank");
-                        }
-                    }
+            if (Rs2Bank.isOpen()) {
+                if (Rs2Bank.getBankItem("Coins") != null) {
+                    totalGP = Rs2Bank.getBankItem("Coins").getQuantity();
                 }
             }
-        }
-        if(Rs2Bank.isOpen()){
-            if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
         }
     }
 
@@ -659,7 +632,7 @@ public class f2pAccountBuilderScript extends Script {
                             if (!Rs2Inventory.contains("Needle")) {
                                 if (Rs2Bank.isOpen()) {
                                     if (Rs2Bank.getBankItem("Needle", true) != null) {
-                                        Rs2Bank.withdrawAll("Needle", true);
+                                        Rs2Bank.withdrawOne("Needle", true);
                                         sleepUntil(() -> Rs2Inventory.contains("Needle"), Rs2Random.between(2000, 5000));
                                         sleepHumanReaction();
                                     } else {
@@ -1332,6 +1305,9 @@ public class f2pAccountBuilderScript extends Script {
     //skilling
 
     public void sleepThroughMulipleAnimations(){
+        if(Rs2Player.isMoving()){
+            sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(3000,6000));
+        }
         if(!Rs2Player.isAnimating()){
             sleepUntil(()-> Rs2Player.isAnimating(), Rs2Random.between(1000,3000));
         }
