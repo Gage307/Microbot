@@ -338,6 +338,10 @@ public class f2pAccountBuilderScript extends Script {
                 }
             }
 
+            objBank = Rs2GameObject.getGameObject(it->it!=null && it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15 && it.getId() == ObjectID.BANKBOOTH || it.getId() == 10583 || it.getId() == 24101 || it.getId() == 25808);
+            npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
+            npcModel = Rs2Npc.getNearestNpcWithAction("Bank");
+
             if(objBank!=null){
                 if(Rs2Camera.isTileOnScreen(objBank) && Rs2GameObject.hasLineOfSight(objBank)){
                     if(Rs2GameObject.interact(objBank, "Bank")){
