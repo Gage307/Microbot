@@ -327,7 +327,7 @@ public class f2pAccountBuilderScript extends Script {
 
     public void walkToBankAndOpenIt(){
         if (!Rs2Bank.isOpen()) {
-            GameObject objBank = Rs2GameObject.getGameObject(it->it!=null&&it.getId() == ObjectID.BANKBOOTH &&it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15);
+            GameObject objBank = Rs2GameObject.getGameObject(it->it!=null && it.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 15 && it.getId() == ObjectID.BANKBOOTH || it.getId() == 10583 || it.getId() == 24101 || it.getId() == 25808);
             NPC npcBank = Rs2Npc.getNearestNpcWithAction("Bank");
             Rs2NpcModel npcModel = Rs2Npc.getNearestNpcWithAction("Bank");
 
@@ -385,7 +385,7 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(Rs2GrandExchange.isOpen()){
             chosenSpot = null;
-            
+
             if(Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()){
                 Rs2GrandExchange.collectToInventory();
                 sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
@@ -617,7 +617,7 @@ public class f2pAccountBuilderScript extends Script {
                         if (Rs2Inventory.contains(craftingMaterial) && Rs2Inventory.contains("Thread") && Rs2Inventory.contains("Needle") && !Rs2Inventory.contains(it->it!=null&&it.isNoted())) {
                             closeTheBank();
 
-                            Rs2Inventory.combine("Needle", "Leather");
+                            Rs2Inventory.combine(ItemID.NEEDLE, ItemID.LEATHER);
 
                             String whatWereCrafting = craftingProduct;
                             sleepUntil(() -> Rs2Widget.hasWidget(whatWereCrafting), Rs2Random.between(2000, 5000));
