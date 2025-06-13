@@ -309,7 +309,6 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(Rs2Bank.isOpen()){
             chosenSpot = null;
-            weChangeActivity = true;
 
             if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
 
