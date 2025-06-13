@@ -10,6 +10,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.example.ExampleConfig;
 import net.runelite.client.plugins.microbot.example.ExampleOverlay;
 import net.runelite.client.plugins.microbot.example.ExampleScript;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -48,6 +51,10 @@ public class f2pAccountBuilderPlugin extends Plugin {
         f2paccountbuilderScript.run(config);
         f2paccountbuilderScript.shouldThink = true;
         f2paccountbuilderScript.scriptStartTime = System.currentTimeMillis();
+        Rs2Antiban.activateAntiban(); // Enable Anti Ban
+        Rs2Antiban.resetAntibanSettings();
+        Rs2Antiban.antibanSetupTemplates.applyUniversalAntibanSetup();
+        Rs2Antiban.setActivity(Activity.GENERAL_WOODCUTTING);
     }
 
     protected void shutDown() {

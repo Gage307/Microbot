@@ -9,6 +9,9 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.smelting.enums.Bars;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
@@ -99,7 +102,7 @@ public class f2pAccountBuilderScript extends Script {
         if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.isBreakActive()){
             return;
         }
-        if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
+        if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30) {
             if (Microbot.loggedIn) {
                 Rs2Player.logout();
                 sleepUntil(() -> !Microbot.loggedIn, Rs2Random.between(2000, 5000));
@@ -127,48 +130,63 @@ public class f2pAccountBuilderScript extends Script {
             int random = Rs2Random.between(0,1000);
             if(random <= 100){
                 Microbot.log("We're going woodcutting.");
+                Rs2Antiban.antibanSetupTemplates.applyWoodcuttingSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_WOODCUTTING);
                 shouldWoodcut = true;
                 shouldThink = false;
                 return;
             }
             if(random > 100 && random <= 200){
                 Microbot.log("We're going mining.");
+                Rs2Antiban.antibanSetupTemplates.applyMiningSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_MINING);
                 shouldMine = true;
                 shouldThink = false;
                 return;
             }
             if(random > 200 && random <= 300){
                 Microbot.log("We're going fishing.");
+                Rs2Antiban.antibanSetupTemplates.applyFishingSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_FISHING);
                 shouldFish = true;
                 shouldThink = false;
                 return;
             }
             if(random > 300 && random <= 400){
                 Microbot.log("We're going smelting.");
+                Rs2Antiban.antibanSetupTemplates.applySmithingSetup();
+                Rs2Antiban.setActivity(Activity.SMELTING_BRONZE_BARS);
                 shouldSmelt = true;
                 shouldThink = false;
                 return;
             }
             if(random > 400 && random <= 500){
                 Microbot.log("We're going firemaking.");
+                Rs2Antiban.antibanSetupTemplates.applyFiremakingSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_FIREMAKING);
                 shouldFiremake = true;
                 shouldThink = false;
                 return;
             }
             if(random > 500 && random <= 600){
                 Microbot.log("We're going to cook.");
+                Rs2Antiban.antibanSetupTemplates.applyCookingSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_COOKING);
                 shouldCook = true;
                 shouldThink = false;
                 return;
             }
             if(random > 600 && random <= 700){
                 Microbot.log("We're going to craft.");
+                Rs2Antiban.antibanSetupTemplates.applyCraftingSetup();
+                Rs2Antiban.setActivity(Activity.GENERAL_CRAFTING);
                 shouldCraft = true;
                 shouldThink = false;
                 return;
             }
             if(random > 700 && random <= 800){
                 Microbot.log("We're going to sell what we have.");
+                Rs2Antiban.antibanSetupTemplates.applyGeneralBasicSetup();
                 shouldSellItems = true;
                 shouldThink = false;
                 return;
@@ -266,7 +284,9 @@ public class f2pAccountBuilderScript extends Script {
                         if (!super.isRunning()) {
                             break;
                         }
-                        if(!Microbot.isLoggedIn()){
+                        if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
+                            Rs2Bank.closeBank();
+                            Microbot.log("We're going on break");
                             break;
                         }
                         Rs2Bank.depositAll();
@@ -289,6 +309,7 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(Rs2Bank.isOpen()){
             chosenSpot = null;
+            weChangeActivity = true;
 
             if(Rs2Bank.getBankItem("Coins") != null){totalGP = Rs2Bank.getBankItem("Coins").getQuantity();}
 
@@ -334,6 +355,10 @@ public class f2pAccountBuilderScript extends Script {
 
             while(!Rs2Bank.isOpen()) {
                 if(!super.isRunning()){break;}
+                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
+                    Microbot.log("We're going on break");
+                    break;
+                }
                 if (Rs2Bank.openBank()) {
                     Microbot.log("We opened the bank");
                     sleepUntil(()-> Rs2Bank.isOpen(), Rs2Random.between(10000,15000));
@@ -362,6 +387,7 @@ public class f2pAccountBuilderScript extends Script {
         }
         if(Rs2GrandExchange.isOpen()){
             chosenSpot = null;
+            weChangeActivity = true;
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()){
                 Rs2GrandExchange.collectToInventory();
@@ -540,9 +566,13 @@ public class f2pAccountBuilderScript extends Script {
 
                             while(Rs2Inventory.count(mould) < 1 || Rs2Inventory.count(gem) < 13 || Rs2Inventory.count(bar) < 13){
                                 if(!super.isRunning()){break;}
-                                if(!Microbot.isLoggedIn()){
+
+                                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
+                                    Rs2Bank.closeBank();
+                                    Microbot.log("We're going on break");
                                     break;
                                 }
+
                                 if(Rs2Inventory.isFull()){Rs2Bank.depositAll();}
 
                                 if(!Rs2Inventory.contains(mould) && Rs2Random.between(0,100) < 60){
@@ -801,8 +831,7 @@ public class f2pAccountBuilderScript extends Script {
                             if(!Rs2Player.isAnimating() && !Rs2Player.isMoving()){
                                 ourTree = Rs2GameObject.getGameObject(treeToChop, true);
                                 if(Rs2GameObject.interact(ourTree, "Chop down")){
-                                    sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(7000,15000));
-                                    sleepUntil(()-> !Rs2Player.isAnimating(), Rs2Random.between(20000,50000));
+                                    sleepThroughMulipleAnimations();
                                     sleepHumanReaction();
                                 }
                             }
@@ -1027,7 +1056,7 @@ public class f2pAccountBuilderScript extends Script {
     public void cookFish(int fishesID){
         if (Rs2Inventory.contains(fishesID)) {
             Rs2Inventory.useItemOnObject(fishesID, 43475);
-            sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to cook?", null, false) != null, 5000);
+            sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to cook?", null, false) != null, 10000);
             sleepHumanReaction();
             Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
         }
@@ -1317,10 +1346,8 @@ public class f2pAccountBuilderScript extends Script {
                 if (!super.isRunning()) {
                     break;
                 }
-                if (!Microbot.isLoggedIn()) {
-                    break;
-                }
-                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
+                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
+                    Microbot.log("We're going on break");
                     break;
                 }
                 sleepHumanReaction();
@@ -1331,10 +1358,8 @@ public class f2pAccountBuilderScript extends Script {
                 if (!super.isRunning()) {
                     break;
                 }
-                if (!Microbot.isLoggedIn()) {
-                    break;
-                }
-                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 10) {
+                if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
+                    Microbot.log("We're going on break");
                     break;
                 }
                 sleepHumanReaction();
