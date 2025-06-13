@@ -58,6 +58,8 @@ public class f2pAccountBuilderPlugin extends Plugin {
     }
 
     protected void shutDown() {
+        Rs2Antiban.resetAntibanSettings();
+        Rs2Antiban.deactivateAntiban();
         f2paccountbuilderScript.shutdown();
         overlayManager.remove(f2paccountbuilderOverlay);
         f2paccountbuilderOverlay.myButton.unhookMouseListener();
