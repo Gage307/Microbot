@@ -7,9 +7,15 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.example.ExampleConfig;
 import net.runelite.client.plugins.microbot.example.ExampleOverlay;
 import net.runelite.client.plugins.microbot.example.ExampleScript;
+import net.runelite.client.plugins.microbot.pluginscheduler.api.SchedulablePlugin;
+import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.AndCondition;
+import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.LockCondition;
+import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.LogicalCondition;
+import net.runelite.client.plugins.microbot.pluginscheduler.event.PluginScheduleEntrySoftStopEvent;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
@@ -25,7 +31,7 @@ import java.awt.*;
         enabledByDefault = false
 )
 @Slf4j
-public class f2pAccountBuilderPlugin extends Plugin {
+public class f2pAccountBuilderPlugin extends Plugin implements SchedulablePlugin {
     @Inject
     private f2pAccountBuilderConfig config;
     @Provides
@@ -40,6 +46,7 @@ public class f2pAccountBuilderPlugin extends Plugin {
 
     @Inject
     f2pAccountBuilderScript f2paccountbuilderScript;
+    LogicalCondition stopCondition = new AndCondition();
 
 
     @Override
@@ -64,6 +71,24 @@ public class f2pAccountBuilderPlugin extends Plugin {
         overlayManager.remove(f2paccountbuilderOverlay);
         f2paccountbuilderOverlay.myButton.unhookMouseListener();
     }
+
+    @Subscribe
+    public void onPluginScheduleEntrySoftStopEvent(PluginScheduleEntrySoftStopEvent event) {
+        try{
+            if (event.getPlugin() == this) {
+                Microbot.stopPlugin(this);
+            }
+        } catch (Exception e) {
+            log.error("Error stopping plugin: ", e);
+        }
+    }
+
+    @Override
+    public LogicalCondition getStopCondition() {
+        // Create a new stop condition
+        return this.stopCondition;
+    }
+
     int ticks = 10;
     @Subscribe
     public void onGameTick(GameTick tick)
