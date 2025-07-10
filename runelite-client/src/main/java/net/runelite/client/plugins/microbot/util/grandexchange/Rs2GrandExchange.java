@@ -7,6 +7,7 @@ import net.runelite.api.GrandExchangeOfferState;
 import net.runelite.api.MenuAction;
 import net.runelite.api.VarClientStr;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
@@ -263,7 +264,7 @@ public class Rs2GrandExchange {
 
             Widget pricePerItemButtonXPercent = getPricePerItemButton_PlusXPercent();
             if (pricePerItemButtonXPercent != null) {
-                int basePrice = getItemPrice();
+                int basePrice = Microbot.getVarbitValue(VarbitID.GE_NEWOFFER_TYPE);
                 int currentPercent = NumberExtractor.extractNumber(pricePerItemButtonXPercent.getText());
 
                 // Update Price per item custom percentage if it doesn't match
@@ -321,7 +322,7 @@ public class Rs2GrandExchange {
     private static boolean buyItemAbove5Percent(int timesToIncreasePrice) {
         Widget pricePerItemButton5Percent = getPricePerItemButton_Plus5Percent();
         if (pricePerItemButton5Percent != null) {
-            int basePrice = getItemPrice();
+            int basePrice = Microbot.getVarbitValue(VarbitID.GE_NEWOFFER_TYPE);
             // Call click() as many times as the value of count
             IntStream.range(0, timesToIncreasePrice).forEach(i -> {
                 Microbot.getMouse().click(pricePerItemButton5Percent.getBounds());
@@ -447,13 +448,14 @@ public class Rs2GrandExchange {
             openExchange();
         }
         sleepUntil(Rs2GrandExchange::isOpen);
-        Widget[] collectButton = Rs2Widget.getWidget(465, 6).getDynamicChildren();
-        if (!collectButton[1].isSelfHidden()) {
-            Rs2Widget.clickWidgetFast(
-                    COLLECT_BUTTON, collectToBank ? 2 : 1);
-            sleepUntil(() -> collectButton[1].isSelfHidden());
-        }
-        return collectButton[1].isSelfHidden();
+        Widget collectButton = Rs2Widget.getWidget(COLLECT_BUTTON);
+		if (collectButton == null) return false;
+		// MenuEntryImpl(getOption=Collect to bank, getTarget=, getIdentifier=2, getType=CC_OP, getParam0=0, getParam1=30474246, getItemId=-1, isForceLeftClick=false, getWorldViewId=-1, isDeprioritized=false)
+		// MenuEntryImpl(getOption=Collect to inventory, getTarget=, getIdentifier=1, getType=CC_OP, getParam0=0, getParam1=30474246, getItemId=-1, isForceLeftClick=false, getWorldViewId=-1, isDeprioritized=false)
+		NewMenuEntry entry = new NewMenuEntry(collectToBank ? "Collect to bank" : "Collect to inventory", "", collectToBank ? 2 : 1, MenuAction.CC_OP, 0, collectButton.getId(), false);
+		Rectangle bounds = new Rectangle(collectButton.getBounds());
+		Microbot.doInvoke(entry, bounds);
+		return true;
     }
 
     public static boolean collectToInventory() {
@@ -495,9 +497,8 @@ public class Rs2GrandExchange {
      * @return
      */
     public static boolean sellInventory() {
-        for (Rs2ItemModel item : Rs2Inventory.items()) {
-
-            if (!item.isTradeable()) continue;
+        Rs2Inventory.items().forEachOrdered(item -> {
+            if (!item.isTradeable()) return;
 
             if (Rs2GrandExchange.getAvailableSlot().getKey() == null && Rs2GrandExchange.hasSoldOffer()) {
                 Rs2GrandExchange.collectToBank();
@@ -505,7 +506,7 @@ public class Rs2GrandExchange {
             }
 
             Rs2GrandExchange.sellItemUnder5Percent(item.getName());
-        }
+        });
         return Rs2Inventory.isEmpty();
     }
 
@@ -713,7 +714,7 @@ public class Rs2GrandExchange {
     }
 
     public static int getItemPrice() {
-        return Integer.parseInt(Rs2Widget.getWidget(465, 27).getText().replace(",", ""));
+        return Integer.parseInt(Rs2Widget.getWidget(465, 27).getText().replace(" coins", ""));
     }
 
     public static Widget getSlot(GrandExchangeSlots slot) {
