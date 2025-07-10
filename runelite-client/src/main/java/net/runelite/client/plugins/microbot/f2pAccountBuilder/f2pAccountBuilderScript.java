@@ -204,22 +204,22 @@ public class f2pAccountBuilderScript extends Script {
 
     public void getBuyAndEquipP2PTeles(){
         if(Rs2Player.isInMemberWorld()){
-            if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Amulet of glory("))
-                    || !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Ring of wealth ("))
-                        || !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Combat bracelet("))){
+            if(!Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Amulet of glory("))
+                    || !Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Ring of wealth ("))
+                        || !Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Combat bracelet("))){
                 Microbot.log("We need our teleports");
 
                 this.weChangeActivity = true;
 
-                if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Amulet of glory("))){
+                if(!Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Amulet of glory("))){
                     goToBankandGrabAnItem("Amulet of glory(6)", 1);
                 }
 
-                if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Ring of wealth ("))){
+                if(!Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Ring of wealth ("))){
                     goToBankandGrabAnItem("Ring of wealth (5)", 1);
                 }
 
-                if(!Rs2Equipment.contains(it->it!=null&&it.getName().contains("Combat bracelet("))){
+                if(!Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Combat bracelet("))){
                     goToBankandGrabAnItem("Combat bracelet(6)", 1);
                 }
 
@@ -235,23 +235,23 @@ public class f2pAccountBuilderScript extends Script {
                     sleepHumanReaction();
                 }
 
-                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Amulet of glory(")) && !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Amulet of glory("))){
+                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Amulet of glory(")) && !Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Amulet of glory("))){
                     if(Rs2Inventory.interact("Amulet of glory(6)", "Wear")){
-                        sleepUntil(()-> Rs2Equipment.contains(it->it!=null&&it.getName().equals("Amulet of glory(6)")), Rs2Random.between(2000,5000));
+                        sleepUntil(()-> Rs2Equipment.isWearing(it->it!=null&&it.getName().equals("Amulet of glory(6)")), Rs2Random.between(2000,5000));
                         sleepHumanReaction();
                     }
                 }
 
-                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Ring of wealth (")) && !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Ring of wealth ("))){
+                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Ring of wealth (")) && !Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Ring of wealth ("))){
                     if(Rs2Inventory.interact("Ring of wealth (5)", "Wear")){
-                        sleepUntil(()-> Rs2Equipment.contains(it->it!=null&&it.getName().equals("Ring of wealth (5)")), Rs2Random.between(2000,5000));
+                        sleepUntil(()-> Rs2Equipment.isWearing(it->it!=null&&it.getName().equals("Ring of wealth (5)")), Rs2Random.between(2000,5000));
                         sleepHumanReaction();
                     }
                 }
 
-                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Combat bracelet(")) && !Rs2Equipment.contains(it->it!=null&&it.getName().contains("Combat bracelet("))){
+                if(Rs2Inventory.contains(it->it!=null&&it.getName().contains("Combat bracelet(")) && !Rs2Equipment.isWearing(it->it!=null&&it.getName().contains("Combat bracelet("))){
                     if(Rs2Inventory.interact("Combat bracelet(6)", "Wear")){
-                        sleepUntil(()-> Rs2Equipment.contains(it->it!=null&&it.getName().equals("Combat bracelet(6)")), Rs2Random.between(2000,5000));
+                        sleepUntil(()-> Rs2Equipment.isWearing(it->it!=null&&it.getName().equals("Combat bracelet(6)")), Rs2Random.between(2000,5000));
                         sleepHumanReaction();
                     }
                 }
@@ -775,7 +775,7 @@ public class f2pAccountBuilderScript extends Script {
             if(wcLvl >= 41){axeToUse = "Rune axe"; treeToChop = "Willow tree";}
             String finalaxe = axeToUse;
 
-            if(Rs2Inventory.contains(axeToUse) || Rs2Equipment.contains(it->it!=null&&it.getName().equals(finalaxe))){
+            if(Rs2Inventory.contains(axeToUse) || Rs2Equipment.isWearing(it->it!=null&&it.getName().equals(finalaxe))){
 
                 if(chosenSpot == null){
                     WorldPoint spot1 = null;
@@ -864,7 +864,7 @@ public class f2pAccountBuilderScript extends Script {
             if(miningLvl >= 41){axeToUse = "Rune pickaxe"; rockToMine = "Iron rocks";}
             String finalaxe = axeToUse;
 
-            if(Rs2Inventory.contains(axeToUse) || Rs2Equipment.contains(it->it!=null&&it.getName().equals(finalaxe))){
+            if(Rs2Inventory.contains(axeToUse) || Rs2Equipment.isWearing(it->it!=null&&it.getName().equals(finalaxe))){
 
                 if(chosenSpot == null){
                     WorldPoint spot1 = null;
