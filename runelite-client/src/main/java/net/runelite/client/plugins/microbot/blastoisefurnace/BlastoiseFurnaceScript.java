@@ -27,6 +27,7 @@ import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import java.awt.event.KeyEvent;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static net.runelite.api.gameval.ItemID.*;
@@ -560,10 +561,10 @@ public class BlastoiseFurnaceScript extends Script {
         Plugin plugin = Microbot.getPlugin(SchedulerPlugin.class.getName());
         assert plugin instanceof SchedulerPlugin : "Invalid scheduler plugin";
         SchedulerPlugin scheduler = (SchedulerPlugin) plugin;
-
-        if (scheduler.getNextScheduledPlugin() != null)
+        Optional<Duration> estimatedTime = scheduler.getUpComingEstimatedScheduleTime();
+        if (estimatedTime.isPresent())
         {
-            Duration untilNext = scheduler.getTimeBeforeNextScheduledPlugin();
+            Duration untilNext = estimatedTime.get();
             if (untilNext == null || untilNext.isZero() || untilNext.isNegative())
             {
                 untilNext = scheduler.getTimeUntilNextBreak();
@@ -575,10 +576,8 @@ public class BlastoiseFurnaceScript extends Script {
                 return (int) Math.ceil(millis * 0.2); // 1 ms = 0.2 gold
             }
         }
-
-        if (BreakHandlerScript.breakIn != 0)
-        {
-            return BreakHandlerScript.breakIn * 20;   // 1 s = 20 gold
+        if (BreakHandlerScript.breakIn > 0) {
+            return BreakHandlerScript.breakIn * 20;
         }
 
         return 72000;

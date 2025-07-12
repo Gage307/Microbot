@@ -87,7 +87,6 @@ public class revKillerScript extends Script {
                     if(!timeToBreak()){
                         if(selectedRev.contains("Knight")) {
                             logBackIn();
-                            shouldFlee = false;
                         }
                     }
                     return;
@@ -113,13 +112,7 @@ public class revKillerScript extends Script {
                     return;
                 }
 
-                if(!Rs2InventorySetup.isInventorySetup("Revs")){
-                    Microbot.showMessage("Please create an inventory setup named Revs");
-                    shutdown();
-                    return;
-                }
-
-                var inventorySetup = new Rs2InventorySetup("Revs", mainScheduledFuture);
+                var inventorySetup = new Rs2InventorySetup(config.inventorySetup().getName(), mainScheduledFuture);
 
                 if(firstRun || weDied) {
                     if (!inventorySetup.doesEquipmentMatch()) {
@@ -293,7 +286,6 @@ public class revKillerScript extends Script {
                 if(!super.isRunning()){break;}
                 if(isPkerAround()){break;}
                 if(!WeAreInTheCaves()){break;}
-                if(shouldFlee){return;}
 
                 moveCameraToTile(startTile);
 
@@ -318,7 +310,6 @@ public class revKillerScript extends Script {
                 if(!super.isRunning()){break;}
                 if(isPkerAround()){break;}
                 if(!WeAreInTheCaves()){break;}
-                if(shouldFlee){return;}
 
                 moveCameraToTile(secondTile);
 
@@ -337,7 +328,6 @@ public class revKillerScript extends Script {
                         if(!super.isRunning()){break;}
                         if(isPkerAround()){break;}
                         if(!WeAreInTheCaves()){break;}
-                        if(shouldFlee){return;}
                         if(io > tries){break;}
                         if(Rs2Npc.getNpc("Revenant knight").getWorldLocation().distanceTo(Rs2Player.getWorldLocation())<=1 && !Rs2Npc.getNpc("Revenant knight").getWorldLocation().equals(thirdTile)){
                             Microbot.log("Rev is on a bad tile breaking loop");
@@ -365,7 +355,6 @@ public class revKillerScript extends Script {
                     if(!super.isRunning()){break;}
                     if(isPkerAround()){break;}
                     if(!WeAreInTheCaves()){break;}
-                    if(shouldFlee){return;}
                     moveCameraToTile(fifthTile);
                     Rs2Walker.walkCanvas(fifthTile);
                     sleepUntil(() -> Rs2Player.isMoving(), Rs2Random.between(1000, 3000));
@@ -580,13 +569,16 @@ public class revKillerScript extends Script {
             logBackIn();
             shouldFlee = false;
             return;
-        } else {
-            if(isPkerAround()) {
+        }
+
+        if(Rs2Player.isInCombat()) {
+            if (isPkerAround() && Microbot.isLoggedIn()) {
                 getAwayFromPker();
                 shouldFlee = false;
                 return;
             }
         }
+
 
         shouldFlee = false;
         Rs2Walker.setTarget(null);
@@ -604,7 +596,7 @@ public class revKillerScript extends Script {
                 sleep(1000, 3000);
                 if (!Microbot.isLoggedIn()) {
                     new Login(Login.getRandomWorld(true));
-                    sleepUntil(() -> Microbot.isLoggedIn() && Rs2Player.getLocalPlayer() != null, Rs2Random.between(10000, 20000));
+                    sleepUntil(() -> Microbot.isLoggedIn(), Rs2Random.between(10000, 20000));
                 }
             }
             shouldFlee = false;
@@ -617,17 +609,15 @@ public class revKillerScript extends Script {
         //kill the walker incase we were walking.
         Rs2Walker.setTarget(null);
 
-        if(!isPkerAround()){
-            shouldFlee = false;
-            return;
-        }
-
         if(!Rs2Player.isTeleBlocked()){
             Microbot.log("At least we're not teleblocked.");
             enablePrayer();
             if(Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) > 30) {
                 while (Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) > 30) {
                     if (!super.isRunning()) {
+                        break;
+                    }
+                    if(!shouldFlee){
                         break;
                     }
                     Microbot.log("Walking to below");
@@ -651,6 +641,9 @@ public class revKillerScript extends Script {
                 while (Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) >= 20 && Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) <= 30) {
                     Microbot.log("Attempting to teleport via glory");
                     if (!super.isRunning()) {
+                        break;
+                    }
+                    if(!shouldFlee){
                         break;
                     }
                     if (Rs2Equipment.interact(EquipmentInventorySlot.AMULET, "Edgeville")) {
@@ -678,6 +671,9 @@ public class revKillerScript extends Script {
                 while (Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) <= 20) {
                     Microbot.log("Attempting to teleport via dueling");
                     if (!super.isRunning()) {
+                        break;
+                    }
+                    if(!shouldFlee){
                         break;
                     }
                     if (Rs2Equipment.interact(EquipmentInventorySlot.RING, "Ferox Enclave")) {
