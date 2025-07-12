@@ -279,7 +279,7 @@ public class f2pAccountBuilderScript extends Script {
         if(weChangeActivity){
             if(Rs2Bank.isOpen()) {
                 if (!Rs2Inventory.isEmpty()) {
-                    BreakHandlerScript.lockState = true;
+                    BreakHandlerScript.lockState.set(true);
                     while (!Rs2Inventory.isEmpty()) {
                         if (!super.isRunning()) {
                             break;
@@ -293,7 +293,7 @@ public class f2pAccountBuilderScript extends Script {
                         sleepUntil(() -> Rs2Inventory.isEmpty(), Rs2Random.between(2000, 5000));
                         sleepHumanReaction();
                     }
-                    BreakHandlerScript.lockState = false;
+                    BreakHandlerScript.lockState.set(false);
                 }
                 if(Rs2Inventory.isEmpty()){
                     weChangeActivity = false;
@@ -352,7 +352,7 @@ public class f2pAccountBuilderScript extends Script {
             if (Rs2Bank.walkToBank()) {
                 Microbot.log("Walking to the bank");
             }
-            BreakHandlerScript.lockState = true;
+            BreakHandlerScript.lockState.set(true);
             while(!Rs2Bank.isOpen()) {
                 if(!super.isRunning()){break;}
                 if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
@@ -365,7 +365,7 @@ public class f2pAccountBuilderScript extends Script {
                     sleepHumanReaction();
                 }
             }
-            BreakHandlerScript.lockState = false;
+            BreakHandlerScript.lockState.set(false);
             if (Rs2Bank.isOpen()) {
                 if (Rs2Bank.getBankItem("Coins") != null) {
                     totalGP = Rs2Bank.getBankItem("Coins").getQuantity();
@@ -390,7 +390,7 @@ public class f2pAccountBuilderScript extends Script {
             weChangeActivity = true;
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()){
-                Rs2GrandExchange.collectToInventory();
+                Rs2GrandExchange.collectAllToInventory();
                 sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
                 sleepHumanReaction();
             }
@@ -412,23 +412,16 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
 
-            if(howMany <= 2){
-                if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 60)){
-                    sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
-                    sleepHumanReaction();
-                }
+
+            if(Rs2GrandExchange.buyItem(item, itemsPrice, howMany)){
+                sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
+                sleepHumanReaction();
             }
 
-            if(howMany > 2){
-                if(Rs2GrandExchange.buyItemAboveXPercent(item, howMany, 30)){
-                    sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
-                    sleepHumanReaction();
-                }
-            }
 
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers()){
-                Rs2GrandExchange.collectToInventory();
+                Rs2GrandExchange.collectAllToInventory();
                 sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
                 sleepHumanReaction();
             }
@@ -475,13 +468,13 @@ public class f2pAccountBuilderScript extends Script {
                 if (Rs2GrandExchange.isOpen()) {
                     for (String item : items) {
                         if (Rs2Inventory.get(item) != null) {
-                            Rs2GrandExchange.sellItemUnder5Percent(item);
+                            Rs2GrandExchange.sellItem(item, Rs2Inventory.get(item).getQuantity(), 1);
                             sleepUntil(() -> Rs2GrandExchange.hasFinishedSellingOffers(), Rs2Random.between(20000,60000));
                             sleepHumanReaction();
                         }
                     }
                     if (Rs2GrandExchange.hasFinishedBuyingOffers() || Rs2GrandExchange.hasFinishedSellingOffers()) {
-                        Rs2GrandExchange.collectToBank();
+                        Rs2GrandExchange.collectAllToBank();
                     }
                 }
             }
@@ -565,7 +558,7 @@ public class f2pAccountBuilderScript extends Script {
                                 goToBankandGrabAnItem(bar, amt);
                                 return;
                             }
-                            BreakHandlerScript.lockState = true;
+                            BreakHandlerScript.lockState.set(true);
                             while(Rs2Inventory.count(mould) < 1 || Rs2Inventory.count(gem) < 13 || Rs2Inventory.count(bar) < 13){
                                 if(!super.isRunning()){break;}
 
@@ -596,7 +589,7 @@ public class f2pAccountBuilderScript extends Script {
                                     sleepHumanReaction();
                                 }
                             }
-                            BreakHandlerScript.lockState = false;
+                            BreakHandlerScript.lockState.set(false);
                         }
 
                         if(Rs2Inventory.contains(mould) && Rs2Inventory.contains(gem) && Rs2Inventory.contains(bar) && !Rs2Inventory.contains(it->it!=null&&it.isNoted())){
@@ -1342,7 +1335,7 @@ public class f2pAccountBuilderScript extends Script {
     //skilling
 
     public void sleepThroughMulipleAnimations(){
-        BreakHandlerScript.lockState = true;
+        BreakHandlerScript.lockState.set(true);
         if(Rs2Player.isMoving()){
             sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(10000,15000));
         }
@@ -1366,7 +1359,7 @@ public class f2pAccountBuilderScript extends Script {
                 sleepHumanReaction();
             }
         }
-        BreakHandlerScript.lockState = false;
+        BreakHandlerScript.lockState.set(false);
     }
 
     @Override
