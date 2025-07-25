@@ -17,6 +17,8 @@ import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.grandexchange.GrandExchangeAction;
+import net.runelite.client.plugins.microbot.util.grandexchange.GrandExchangeRequest;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
@@ -412,12 +414,32 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
 
+            GrandExchangeRequest buyRequest = null;
 
-            if(Rs2GrandExchange.buyItem(item, itemsPrice, howMany)){
+            if(howMany <= 3){
+                buyRequest = GrandExchangeRequest.builder()
+                        .itemName(item)
+                        .exact(true)
+                        .action(GrandExchangeAction.BUY)
+                        .percent(99)
+                        .quantity(howMany)
+                        .build();
+            } else {
+                buyRequest = GrandExchangeRequest.builder()
+                        .itemName(item)
+                        .exact(true)
+                        .action(GrandExchangeAction.BUY)
+                        .percent(20)
+                        .quantity(howMany)
+                        .build();
+            }
+
+
+
+            if(buyRequest != null && Rs2GrandExchange.processOffer(buyRequest)){
                 sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
                 sleepHumanReaction();
             }
-
 
 
             if(Rs2GrandExchange.hasFinishedBuyingOffers()){
