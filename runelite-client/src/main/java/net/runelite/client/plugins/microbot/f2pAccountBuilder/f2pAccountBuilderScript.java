@@ -73,8 +73,6 @@ public class f2pAccountBuilderScript extends Script {
 
                 thinkBasedOnTime(); // Change our activity if it's been X amount of time.
 
-                handleBreaks();
-
                 getBuyAndEquipP2PTeles();
 
                 //Skilling
@@ -100,16 +98,6 @@ public class f2pAccountBuilderScript extends Script {
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
         return true;
-    }
-
-    public void handleBreaks(){
-        if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30) {
-            if (Microbot.loggedIn) {
-                Rs2Player.logout();
-                sleepUntil(() -> !Microbot.loggedIn, Rs2Random.between(2000, 5000));
-            }
-            sleepUntil(() -> BreakHandlerScript.isBreakActive(), Rs2Random.between(30000, 60000));
-        }
     }
 
     public void thinkVoid(){
@@ -434,19 +422,14 @@ public class f2pAccountBuilderScript extends Script {
                         .build();
             }
 
-
-
             if(buyRequest != null && Rs2GrandExchange.processOffer(buyRequest)){
                 sleepUntil(()-> Rs2GrandExchange.hasFinishedBuyingOffers(), Rs2Random.between(20000,60000));
                 sleepHumanReaction();
-            }
-
-
-            if(Rs2GrandExchange.hasFinishedBuyingOffers()){
                 Rs2GrandExchange.collectAllToInventory();
                 sleepUntil(()-> Rs2Inventory.contains(item), Rs2Random.between(2000,5000));
                 sleepHumanReaction();
             }
+
         }
     }
 
