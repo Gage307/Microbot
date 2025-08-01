@@ -95,6 +95,14 @@ public class MQuestScript extends Script {
                         if (choice.getExcludedStrings() != null && choice.getExcludedStrings().stream().anyMatch(Rs2Widget::hasWidget))
                             continue;
 
+                        String[] acceptable = new String[]{"yes ", "yes,", "yes.", "yes", "yes!", " yes"};
+                        for (String good : acceptable) {
+                            if(Rs2Dialogue.hasDialogueOption(good, false)){
+                                Rs2Dialogue.clickOption(good, false);
+                                return;
+                            }
+                        }
+
                         for (var dialogChoice : dialogChoices) {
                             if (dialogChoice.getText().endsWith(choice.getChoice())) {
                                 Rs2Keyboard.keyPress(dialogChoice.getOnKeyListener()[7].toString().charAt(0));
