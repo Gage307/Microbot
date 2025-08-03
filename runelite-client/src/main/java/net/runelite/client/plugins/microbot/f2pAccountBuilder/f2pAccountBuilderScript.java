@@ -5,8 +5,10 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.ObjectID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.barrows.BarrowsScript;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.smelting.enums.Bars;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
@@ -14,7 +16,10 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
+import net.runelite.client.plugins.microbot.util.cache.Rs2SkillCache;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
+import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grandexchange.GrandExchangeAction;
@@ -28,11 +33,13 @@ import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.http.api.worlds.World;
 
 import java.awt.event.KeyEvent;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 
@@ -52,6 +59,8 @@ public class f2pAccountBuilderScript extends Script {
     private boolean shouldCook = false;
     private boolean shouldCraft = false;
     private boolean shouldSellItems = false;
+    private boolean shouldBankStand = false;
+    private boolean shouldTrainCombat = false;
 
     private boolean weChangeActivity = false;
 
@@ -83,10 +92,11 @@ public class f2pAccountBuilderScript extends Script {
                 firemake();
                 cook();
                 craft();
-
+                trainCombat();
                 //Skilling
 
                 sellItems();
+                bankStand();
 
 
                 long endTime = System.currentTimeMillis();
@@ -110,8 +120,10 @@ public class f2pAccountBuilderScript extends Script {
             this.shouldFiremake = false;
             this.shouldCook = false;
             this.shouldCraft = false;
+            this.shouldTrainCombat = false;
 
             this.shouldSellItems = false;
+            this.shouldBankStand = false;
 
             this.chosenSpot = null;
             this.weChangeActivity = true;
@@ -180,7 +192,121 @@ public class f2pAccountBuilderScript extends Script {
                 shouldThink = false;
                 return;
             }
+            if(random > 800 && random <= 900){
+                Microbot.log("We're going to bank stand. This helps with ban rates");
+                Rs2Antiban.antibanSetupTemplates.applyGeneralBasicSetup();
+                shouldBankStand = true;
+                shouldThink = false;
+                return;
+            }
+            if(random > 900 && random <= 1000){
+                Microbot.log("We're going to train melee");
+                Rs2Antiban.antibanSetupTemplates.applyCombatSetup();
+                Rs2Antiban.setActivity(Activity.KILLING_COWS_AND_TANNING_COWHIDE);
+                shouldTrainCombat = true;
+                shouldThink = false;
+                return;
+            }
 
+        }
+    }
+
+    public enum ArmorAndWeapons {
+        IronArmor(new int[]{ItemID.IRON_PLATEBODY, ItemID.IRON_PLATELEGS, ItemID.IRON_KITESHIELD, ItemID.IRON_FULL_HELM}, 1, false),
+        IronWeapon(new int[]{ItemID.IRON_SCIMITAR, ItemID.IRON_LONGSWORD}, 1, true),
+
+        SteelArmor(new int[]{ItemID.STEEL_PLATEBODY, ItemID.STEEL_PLATELEGS, ItemID.STEEL_KITESHIELD, ItemID.STEEL_FULL_HELM}, 5, false),
+        SteelWeapon(new int[]{ItemID.STEEL_SCIMITAR, ItemID.STEEL_LONGSWORD}, 5, true),
+
+        MithrilArmor(new int[]{ItemID.MITHRIL_PLATEBODY, ItemID.MITHRIL_PLATELEGS, ItemID.MITHRIL_KITESHIELD, ItemID.MITHRIL_FULL_HELM}, 20, false),
+        MithrilWeapon(new int[]{ItemID.MITHRIL_SCIMITAR, ItemID.MITHRIL_LONGSWORD}, 20, true),
+
+        AdamantArmor(new int[]{ItemID.ADAMANT_PLATEBODY, ItemID.ADAMANT_PLATELEGS, ItemID.ADAMANT_KITESHIELD, ItemID.ADAMANT_FULL_HELM}, 30, false),
+        AdamantWeapon(new int[]{ItemID.ADAMANT_SCIMITAR, ItemID.ADAMANT_LONGSWORD}, 30, true);
+
+        private int[] armorItemIDs;
+
+        private int requiredLvl;
+
+        private boolean isWeapon;
+
+        ArmorAndWeapons(int[] armorItemIDs, int requiredLvl, boolean isWeapon) {
+            this.armorItemIDs = armorItemIDs;
+            this.requiredLvl = requiredLvl;
+            this.isWeapon = isWeapon;
+        }
+
+        public int[] armorItemIDs() { return armorItemIDs; }
+        public int requiredLvl() { return requiredLvl; }
+        public boolean isWeapon() { return isWeapon; }
+    }
+
+    public void trainCombat(){
+        int[] Armor = null;
+        int[] Weapon = null;
+        for (ArmorAndWeapons armorAndWeapons : ArmorAndWeapons.values()) {
+            int DefLevel = Rs2SkillCache.getRealSkillLevel(Skill.DEFENCE);
+            int AttLevel = Rs2SkillCache.getRealSkillLevel(Skill.ATTACK);
+            if(armorAndWeapons.isWeapon()){
+                if(AttLevel >= armorAndWeapons.requiredLvl()){
+                    Weapon = armorAndWeapons.armorItemIDs;
+                }
+            } else {
+                if(DefLevel >= armorAndWeapons.requiredLvl()){
+                    Armor = armorAndWeapons.armorItemIDs;
+                }
+            }
+        }
+        if(Armor == null || Weapon == null){
+            Microbot.log("Error getting the best armor and weapon");
+            return;
+        }
+        if(!Rs2Equipment.isWearing(Armor) || !Rs2Equipment.isWearing(Weapon)){
+            Rs2ItemManager theManager = new Rs2ItemManager();
+            if(!Rs2Equipment.isWearing(Armor) && !Rs2Inventory.contains(Armor)){
+                for (int itemId : Armor) {
+                    goToBankandGrabAnItem(theManager.getItemComposition(itemId).getName(), 1);
+                }
+            }
+            if(!Rs2Equipment.isWearing(Armor) && Rs2Inventory.contains(Armor)){
+                Rs2Inventory.equip(Armor);
+            }
+
+            if(!Rs2Equipment.isWearing(Weapon[0]) && !Rs2Inventory.contains(Weapon[0])){
+                goToBankandGrabAnItem(theManager.getItemComposition(Weapon[0]).getName(), 1);
+            }
+            if(!Rs2Equipment.isWearing(Weapon[0]) && Rs2Inventory.contains(Weapon[0])){
+                Rs2Inventory.equip(Weapon[0]);
+            }
+        } else {
+            // if we're ready to go
+            WorldPoint cows = new WorldPoint(3031, 3305, 0);
+            if(cows.distanceTo(Rs2Player.getWorldLocation()) >= 7){
+                Rs2Walker.walkTo(cows);
+            } else {
+                if(!Rs2Player.isInCombat()){
+                    Rs2NpcModel cow = Rs2Npc.getNpcs(it->it!=null&&!it.isInteracting()&&!it.isDead()&&it.getName().toLowerCase().contains("cow")&&!it.getName().toLowerCase().contains("dairy")).findFirst().orElse(null);
+                    if(cow!=null){
+                        Rs2Npc.attack(cow);
+                        sleepHumanReaction();
+                        sleepThroughMulipleAnimations();
+                        if(Rs2Random.between(0,100) < Rs2Random.between(1,10)){
+                            int random = Rs2Random.between(0,100);
+                            if (random < 25) {
+                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_ONE);
+                            } else if (random < 50) {
+                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_TWO);
+                            } else if (random < 75) {
+                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_THREE);
+                            } else {
+                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_FOUR);
+                            }
+                        }
+                    } else {
+                        Microbot.log("Can't find any cows!");
+                    }
+                }
+            }
         }
     }
 
@@ -430,6 +556,16 @@ public class f2pAccountBuilderScript extends Script {
                 sleepHumanReaction();
             }
 
+        }
+    }
+
+    public void bankStand(){
+        if(shouldBankStand){
+            if(Rs2Player.getWorldLocation().distanceTo(Rs2Bank.getNearestBank().getWorldPoint()) > 5){
+                Rs2Bank.walkToBank();
+            } else {
+                Microbot.log("Bank standing.");
+            }
         }
     }
 
