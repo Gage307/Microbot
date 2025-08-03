@@ -242,77 +242,79 @@ public class f2pAccountBuilderScript extends Script {
     }
 
     public void trainCombat(){
-        int[] Armor = null;
-        int[] Weapon = null;
-        for (ArmorAndWeapons armorAndWeapons : ArmorAndWeapons.values()) {
-            int DefLevel = Rs2SkillCache.getRealSkillLevel(Skill.DEFENCE);
-            int AttLevel = Rs2SkillCache.getRealSkillLevel(Skill.ATTACK);
-            if(armorAndWeapons.isWeapon()){
-                if(AttLevel >= armorAndWeapons.requiredLvl()){
-                    Weapon = armorAndWeapons.armorItemIDs;
-                }
-            } else {
-                if(DefLevel >= armorAndWeapons.requiredLvl()){
-                    Armor = armorAndWeapons.armorItemIDs;
-                }
-            }
-        }
-        if(Armor == null || Weapon == null){
-            Microbot.log("Error getting the best armor and weapon");
-            return;
-        }
-        if(!Rs2Equipment.isWearing(Armor) || !Rs2Equipment.isWearing(Weapon)){
-            Rs2ItemManager theManager = new Rs2ItemManager();
-            if(!Rs2Equipment.isWearing(Armor) && !Rs2Inventory.contains(Armor)){
-                for (int itemId : Armor) {
-                    goToBankandGrabAnItem(theManager.getItemComposition(itemId).getName(), 1);
-                }
-            }
-            if(!Rs2Equipment.isWearing(Armor)){
-                if(Rs2Bank.isOpen()) Rs2Bank.closeBank();
-                if(Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
-                for (int itemId : Armor) {
-                    if(Rs2Inventory.contains(itemId)){
-                        Rs2Inventory.equip(itemId);
-                        sleepUntil(()-> Rs2Equipment.isWearing(itemId), 2000);
+        if(shouldTrainCombat) {
+            int[] Armor = null;
+            int[] Weapon = null;
+            for (ArmorAndWeapons armorAndWeapons : ArmorAndWeapons.values()) {
+                int DefLevel = Rs2SkillCache.getRealSkillLevel(Skill.DEFENCE);
+                int AttLevel = Rs2SkillCache.getRealSkillLevel(Skill.ATTACK);
+                if (armorAndWeapons.isWeapon()) {
+                    if (AttLevel >= armorAndWeapons.requiredLvl()) {
+                        Weapon = armorAndWeapons.armorItemIDs;
+                    }
+                } else {
+                    if (DefLevel >= armorAndWeapons.requiredLvl()) {
+                        Armor = armorAndWeapons.armorItemIDs;
                     }
                 }
             }
-
-            if(!Rs2Equipment.isWearing(Weapon[0]) && !Rs2Inventory.contains(Weapon[0])){
-                goToBankandGrabAnItem(theManager.getItemComposition(Weapon[0]).getName(), 1);
+            if (Armor == null || Weapon == null) {
+                Microbot.log("Error getting the best armor and weapon");
+                return;
             }
-            if(!Rs2Equipment.isWearing(Weapon[0]) && Rs2Inventory.contains(Weapon[0])){
-                if(Rs2Bank.isOpen()) Rs2Bank.closeBank();
-                if(Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
-                Rs2Inventory.equip(Weapon[0]);
-            }
-        } else {
-            // if we're ready to go
-            WorldPoint cows = new WorldPoint(3031, 3305, 0);
-            if(cows.distanceTo(Rs2Player.getWorldLocation()) >= 7){
-                Rs2Walker.walkTo(cows);
-            } else {
-                if(!Rs2Player.isInCombat()){
-                    Rs2NpcModel cow = Rs2Npc.getNpcs(it->it!=null&&!it.isInteracting()&&!it.isDead()&&it.getName().toLowerCase().contains("cow")&&!it.getName().toLowerCase().contains("dairy")).findFirst().orElse(null);
-                    if(cow!=null){
-                        Rs2Npc.attack(cow);
-                        sleepHumanReaction();
-                        sleepThroughMulipleAnimations();
-                        if(Rs2Random.between(0,100) < Rs2Random.between(1,10)){
-                            int random = Rs2Random.between(0,100);
-                            if (random < 25) {
-                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_ONE);
-                            } else if (random < 50) {
-                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_TWO);
-                            } else if (random < 75) {
-                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_THREE);
-                            } else {
-                                Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_FOUR);
-                            }
+            if (!Rs2Equipment.isWearing(Armor) || !Rs2Equipment.isWearing(Weapon)) {
+                Rs2ItemManager theManager = new Rs2ItemManager();
+                if (!Rs2Equipment.isWearing(Armor) && !Rs2Inventory.contains(Armor)) {
+                    for (int itemId : Armor) {
+                        goToBankandGrabAnItem(theManager.getItemComposition(itemId).getName(), 1);
+                    }
+                }
+                if (!Rs2Equipment.isWearing(Armor)) {
+                    if (Rs2Bank.isOpen()) Rs2Bank.closeBank();
+                    if (Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
+                    for (int itemId : Armor) {
+                        if (Rs2Inventory.contains(itemId)) {
+                            Rs2Inventory.equip(itemId);
+                            sleepUntil(() -> Rs2Equipment.isWearing(itemId), 2000);
                         }
-                    } else {
-                        Microbot.log("Can't find any cows!");
+                    }
+                }
+
+                if (!Rs2Equipment.isWearing(Weapon[0]) && !Rs2Inventory.contains(Weapon[0])) {
+                    goToBankandGrabAnItem(theManager.getItemComposition(Weapon[0]).getName(), 1);
+                }
+                if (!Rs2Equipment.isWearing(Weapon[0]) && Rs2Inventory.contains(Weapon[0])) {
+                    if (Rs2Bank.isOpen()) Rs2Bank.closeBank();
+                    if (Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
+                    Rs2Inventory.equip(Weapon[0]);
+                }
+            } else {
+                // if we're ready to go
+                WorldPoint cows = new WorldPoint(3031, 3305, 0);
+                if (cows.distanceTo(Rs2Player.getWorldLocation()) >= 7) {
+                    Rs2Walker.walkTo(cows);
+                } else {
+                    if (!Rs2Player.isInCombat()) {
+                        Rs2NpcModel cow = Rs2Npc.getNpcs(it -> it != null && !it.isInteracting() && !it.isDead() && it.getName().toLowerCase().contains("cow") && !it.getName().toLowerCase().contains("dairy")).findFirst().orElse(null);
+                        if (cow != null) {
+                            Rs2Npc.attack(cow);
+                            sleepHumanReaction();
+                            sleepThroughMulipleAnimations();
+                            if (Rs2Random.between(0, 100) < Rs2Random.between(1, 10)) {
+                                int random = Rs2Random.between(0, 100);
+                                if (random < 25) {
+                                    Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_ONE);
+                                } else if (random < 50) {
+                                    Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_TWO);
+                                } else if (random < 75) {
+                                    Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_THREE);
+                                } else {
+                                    Rs2Combat.setAttackStyle(WidgetInfo.COMBAT_STYLE_FOUR);
+                                }
+                            }
+                        } else {
+                            Microbot.log("Can't find any cows!");
+                        }
                     }
                 }
             }
