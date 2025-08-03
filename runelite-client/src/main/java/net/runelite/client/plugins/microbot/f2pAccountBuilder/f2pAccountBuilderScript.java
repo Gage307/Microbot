@@ -268,14 +268,23 @@ public class f2pAccountBuilderScript extends Script {
                     goToBankandGrabAnItem(theManager.getItemComposition(itemId).getName(), 1);
                 }
             }
-            if(!Rs2Equipment.isWearing(Armor) && Rs2Inventory.contains(Armor)){
-                Rs2Inventory.equip(Armor);
+            if(!Rs2Equipment.isWearing(Armor)){
+                if(Rs2Bank.isOpen()) Rs2Bank.closeBank();
+                if(Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
+                for (int itemId : Armor) {
+                    if(Rs2Inventory.contains(itemId)){
+                        Rs2Inventory.equip(itemId);
+                        sleepUntil(()-> Rs2Equipment.isWearing(itemId), 2000);
+                    }
+                }
             }
 
             if(!Rs2Equipment.isWearing(Weapon[0]) && !Rs2Inventory.contains(Weapon[0])){
                 goToBankandGrabAnItem(theManager.getItemComposition(Weapon[0]).getName(), 1);
             }
             if(!Rs2Equipment.isWearing(Weapon[0]) && Rs2Inventory.contains(Weapon[0])){
+                if(Rs2Bank.isOpen()) Rs2Bank.closeBank();
+                if(Rs2GrandExchange.isOpen()) Rs2GrandExchange.closeExchange();
                 Rs2Inventory.equip(Weapon[0]);
             }
         } else {
