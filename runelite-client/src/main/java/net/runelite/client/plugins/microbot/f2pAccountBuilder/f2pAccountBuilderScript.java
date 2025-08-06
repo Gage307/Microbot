@@ -539,6 +539,10 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
 
+            if(!Rs2GrandExchange.isAllSlotsEmpty()){
+                Rs2GrandExchange.abortAllOffers(true);
+            }
+
             GrandExchangeRequest buyRequest = null;
 
             if(howMany <= 3){
@@ -554,7 +558,7 @@ public class f2pAccountBuilderScript extends Script {
                         .itemName(item)
                         .exact(true)
                         .action(GrandExchangeAction.BUY)
-                        .percent(20)
+                        .percent(30)
                         .quantity(howMany)
                         .build();
             }
