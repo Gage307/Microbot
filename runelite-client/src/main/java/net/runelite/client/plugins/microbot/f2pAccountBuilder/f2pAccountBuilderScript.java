@@ -78,7 +78,7 @@ public class f2pAccountBuilderScript extends Script {
                 BreakHandlerScript.lockState.set(true);
                 long startTime = System.currentTimeMillis();
 
-                thinkVoid(); // decide what we're going to do.
+                thinkVoid(config); // decide what we're going to do.
 
                 thinkBasedOnTime(); // Change our activity if it's been X amount of time.
 
@@ -110,7 +110,7 @@ public class f2pAccountBuilderScript extends Script {
         return true;
     }
 
-    public void thinkVoid(){
+    public void thinkVoid(f2pAccountBuilderConfig config){
         if(shouldThink){
             //set our booleans to false
             this.shouldWoodcut = false;
@@ -186,6 +186,8 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
             if(random > 700 && random <= 800){
+                if(!config.shouldWeSellItems()) return;
+                
                 Microbot.log("We're going to sell what we have.");
                 Rs2Antiban.antibanSetupTemplates.applyGeneralBasicSetup();
                 shouldSellItems = true;
