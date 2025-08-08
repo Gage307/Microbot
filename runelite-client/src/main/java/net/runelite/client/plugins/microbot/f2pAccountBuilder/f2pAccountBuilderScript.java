@@ -74,8 +74,8 @@ public class f2pAccountBuilderScript extends Script {
             try {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
-                if(BreakHandlerScript.breakIn != -1 && BreakHandlerScript.isBreakActive()) return;
 
+                BreakHandlerScript.lockState.set(true);
                 long startTime = System.currentTimeMillis();
 
                 thinkVoid(); // decide what we're going to do.
@@ -97,7 +97,7 @@ public class f2pAccountBuilderScript extends Script {
 
                 sellItems();
                 bankStand();
-
+                BreakHandlerScript.lockState.set(false);
 
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
@@ -406,7 +406,6 @@ public class f2pAccountBuilderScript extends Script {
         if(weChangeActivity){
             if(Rs2Bank.isOpen()) {
                 if (!Rs2Inventory.isEmpty()) {
-                    BreakHandlerScript.lockState.set(true);
                     while (!Rs2Inventory.isEmpty()) {
                         if (!super.isRunning()) {
                             break;
@@ -420,7 +419,6 @@ public class f2pAccountBuilderScript extends Script {
                         sleepUntil(() -> Rs2Inventory.isEmpty(), Rs2Random.between(2000, 5000));
                         sleepHumanReaction();
                     }
-                    BreakHandlerScript.lockState.set(false);
                 }
                 if(Rs2Inventory.isEmpty()){
                     weChangeActivity = false;
@@ -479,7 +477,6 @@ public class f2pAccountBuilderScript extends Script {
             if (Rs2Bank.walkToBank()) {
                 Microbot.log("Walking to the bank");
             }
-            BreakHandlerScript.lockState.set(true);
             while(!Rs2Bank.isOpen()) {
                 if(!super.isRunning()){break;}
                 if (BreakHandlerScript.breakIn != -1 && BreakHandlerScript.breakIn < 30 || BreakHandlerScript.isBreakActive()) {
@@ -492,7 +489,6 @@ public class f2pAccountBuilderScript extends Script {
                     sleepHumanReaction();
                 }
             }
-            BreakHandlerScript.lockState.set(false);
             if (Rs2Bank.isOpen()) {
                 if (Rs2Bank.getBankItem("Coins") != null) {
                     totalGP = Rs2Bank.getBankItem("Coins").getQuantity();
@@ -714,7 +710,7 @@ public class f2pAccountBuilderScript extends Script {
                                 goToBankandGrabAnItem(bar, amt);
                                 return;
                             }
-                            BreakHandlerScript.lockState.set(true);
+
                             while(Rs2Inventory.count(mould) < 1 || Rs2Inventory.count(gem) < 13 || Rs2Inventory.count(bar) < 13){
                                 if(!super.isRunning()){break;}
 
@@ -745,7 +741,6 @@ public class f2pAccountBuilderScript extends Script {
                                     sleepHumanReaction();
                                 }
                             }
-                            BreakHandlerScript.lockState.set(false);
                         }
 
                         if(Rs2Inventory.contains(mould) && Rs2Inventory.contains(gem) && Rs2Inventory.contains(bar) && !Rs2Inventory.contains(it->it!=null&&it.isNoted())){
@@ -1491,7 +1486,6 @@ public class f2pAccountBuilderScript extends Script {
     //skilling
 
     public void sleepThroughMulipleAnimations(){
-        BreakHandlerScript.lockState.set(true);
         if(Rs2Player.isMoving()){
             sleepUntil(()-> !Rs2Player.isMoving(), Rs2Random.between(10000,15000));
         }
@@ -1515,7 +1509,6 @@ public class f2pAccountBuilderScript extends Script {
                 sleepHumanReaction();
             }
         }
-        BreakHandlerScript.lockState.set(false);
     }
 
     @Override
