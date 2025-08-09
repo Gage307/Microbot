@@ -51,6 +51,7 @@ public class f2pAccountBuilderScript extends Script {
     public volatile long scriptStartTime = System.currentTimeMillis();
     private long howLongUntilThink = Rs2Random.between(10,40);
     private int totalGP = 0;
+    private boolean areWeMems = false;
 
     private boolean shouldWoodcut = false;
     private boolean shouldMine = false;
@@ -78,6 +79,8 @@ public class f2pAccountBuilderScript extends Script {
 
                 BreakHandlerScript.lockState.set(true);
                 long startTime = System.currentTimeMillis();
+
+                setAreWeMems();
 
                 thinkVoid(config); // decide what we're going to do.
 
@@ -211,6 +214,14 @@ public class f2pAccountBuilderScript extends Script {
                 return;
             }
 
+        }
+    }
+
+    public void setAreWeMems(){
+        if(Microbot.isLoggedIn()){
+            if(Rs2Player.isInMemberWorld()){
+                this.areWeMems = true;
+            }
         }
     }
 
@@ -581,7 +592,7 @@ public class f2pAccountBuilderScript extends Script {
                 Microbot.log("Bank standing.");
                 if(!Microbot.isLoggedIn()){
                     sleep(30000,480000);
-                    new Login(Login.getRandomWorld(true));
+                    new Login(Login.getRandomWorld(this.areWeMems));
                     sleepUntil(() -> Microbot.isLoggedIn(), Rs2Random.between(10000, 20000));
                 }
             }
