@@ -34,6 +34,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
+import net.runelite.client.plugins.microbot.util.security.Login;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.http.api.worlds.World;
@@ -187,7 +188,7 @@ public class f2pAccountBuilderScript extends Script {
             }
             if(random > 700 && random <= 800){
                 if(!config.shouldWeSellItems()) return;
-                
+
                 Microbot.log("We're going to sell what we have.");
                 Rs2Antiban.antibanSetupTemplates.applyGeneralBasicSetup();
                 shouldSellItems = true;
@@ -578,6 +579,11 @@ public class f2pAccountBuilderScript extends Script {
                 Rs2Bank.walkToBank();
             } else {
                 Microbot.log("Bank standing.");
+                if(!Microbot.isLoggedIn()){
+                    sleep(30000,480000);
+                    new Login(Login.getRandomWorld(true));
+                    sleepUntil(() -> Microbot.isLoggedIn(), Rs2Random.between(10000, 20000));
+                }
             }
         }
     }
