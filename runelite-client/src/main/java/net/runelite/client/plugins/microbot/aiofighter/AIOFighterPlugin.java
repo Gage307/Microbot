@@ -20,6 +20,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.aiofighter.bank.BankerScript;
 import net.runelite.client.plugins.microbot.aiofighter.cannon.CannonScript;
 import net.runelite.client.plugins.microbot.aiofighter.combat.*;
+import net.runelite.client.plugins.microbot.aiofighter.loot.EatForSpaceScript;
 import net.runelite.client.plugins.microbot.aiofighter.enums.PrayerStyle;
 import net.runelite.client.plugins.microbot.aiofighter.enums.State;
 import net.runelite.client.plugins.microbot.aiofighter.loot.LootScript;
@@ -72,6 +73,7 @@ public class AIOFighterPlugin extends Plugin {
     private final AttackNpcScript attackNpc = new AttackNpcScript();
 
     private final FoodScript foodScript = new FoodScript();
+    private final EatForSpaceScript eatForSpaceScript = new EatForSpaceScript();
     private final LootScript lootScript = new LootScript();
     private final SafeSpot safeSpotScript = new SafeSpot();
     private final FlickerScript flickerScript = new FlickerScript();
@@ -147,9 +149,20 @@ public class AIOFighterPlugin extends Plugin {
         potionManagerScript.run(config);
         safetyScript.run(config);
         slayerScript.run(config);
-        Microbot.getSpecialAttackConfigs()
-                .setSpecialAttack(true);
+        
+        // Configure special attack settings
+        if (config.useSpecialAttack() && config.specWeapon() != null) {
+            Microbot.getSpecialAttackConfigs()
+                    .setSpecialAttack(true)
+                    .setSpecialAttackWeapon(config.specWeapon())
+                    .setMinimumSpecEnergy(config.specWeapon().getEnergyRequired());
+        } else {
+            Microbot.getSpecialAttackConfigs()
+                    .setSpecialAttack(config.useSpecialAttack());
+        }
+        
         Rs2Slayer.blacklistedSlayerMonsters = getBlacklistedSlayerNpcs();
+        eatForSpaceScript.run(config);  // Run eat for space BEFORE banking decisions
         bankerScript.run(config);
         shopScript.run(config);
     }
@@ -160,6 +173,7 @@ public class AIOFighterPlugin extends Plugin {
         cannonScript.shutdown();
         attackNpc.shutdown();
         foodScript.shutdown();
+        eatForSpaceScript.shutdown();
         safeSpotScript.shutdown();
         flickerScript.shutdown();
         useSpecialAttackScript.shutdown();
@@ -172,6 +186,7 @@ public class AIOFighterPlugin extends Plugin {
         slayerScript.shutdown();
         shopScript.shutdown();
         resetLocation();
+        Microbot.getSpecialAttackConfigs().reset();
         overlayManager.remove(playerAssistOverlay);
         overlayManager.remove(playerAssistInfoOverlay);
         playerAssistInfoOverlay.myButton.unhookMouseListener();
@@ -383,6 +398,17 @@ public class AIOFighterPlugin extends Plugin {
                 setCenter(Rs2Player.getWorldLocation());
             }
 
+        }
+        // Handle special attack weapon config changes
+        if (event.getKey().equals("Use special attack") || event.getKey().equals("Spec weapon")) {
+            if (config.useSpecialAttack() && config.specWeapon() != null) {
+                Microbot.getSpecialAttackConfigs()
+                        .setSpecialAttack(true)
+                        .setSpecialAttackWeapon(config.specWeapon())
+                        .setMinimumSpecEnergy(config.specWeapon().getEnergyRequired());
+            } else {
+                Microbot.getSpecialAttackConfigs().reset();
+            }
         }
     }
 

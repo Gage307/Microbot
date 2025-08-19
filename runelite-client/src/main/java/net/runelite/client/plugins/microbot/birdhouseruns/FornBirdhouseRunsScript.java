@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.birdhouseruns;
 
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
@@ -10,9 +11,10 @@ import net.runelite.client.config.Notification;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.birdhouseruns.FornBirdhouseRunsInfo.states;
-import net.runelite.client.plugins.microbot.sticktothescript.common.enums.LogType;
+import net.runelite.client.plugins.microbot.birdhouseruns.enums.Log;
 import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static net.runelite.client.plugins.microbot.birdhouseruns.FornBirdhouseRunsInfo.*;
 
+@Slf4j
 public class FornBirdhouseRunsScript extends Script {
     private static final WorldPoint birdhouseLocation1 = new WorldPoint(3763, 3755, 0);
     private static final WorldPoint birdhouseLocation2 = new WorldPoint(3768, 3761, 0);
@@ -33,6 +36,7 @@ public class FornBirdhouseRunsScript extends Script {
     private static final WorldPoint birdhouseLocation4 = new WorldPoint(3679, 3815, 0);
     public static double version = 1.0;
     private boolean initialized;
+    private String setupErrorMessage = "";
     @Inject
     private Notifier notifier;
     private final FornBirdhouseRunsPlugin plugin;
@@ -53,8 +57,8 @@ public class FornBirdhouseRunsScript extends Script {
              
                 if (!initialized) {
                     if (Rs2Player.getQuestState(Quest.BONE_VOYAGE) != QuestState.FINISHED) {
-                        Microbot.log("You need to finish the quest 'BONE VOYAGE' to use this script");
-                        plugin.reportFinished("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'",false);
+                        log.error("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'");
+                        plugin.reportFinished("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'", false);
                         this.shutdown();
                         return;
                     }
@@ -67,24 +71,24 @@ public class FornBirdhouseRunsScript extends Script {
                             if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
                                 Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
                                 if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
-                                    Microbot.log("Failed to load inventory setup");
-                                    plugin.reportFinished("Birdhouse run failed to load inventory setup",false);
+                                    log.error("Birdhouse run failed to load inventory setup");
+                                    plugin.reportFinished("Birdhouse run failed to load inventory setup", false);
                                     this.shutdown();
                                     return;
                                 }
                                 if (Rs2Bank.isOpen()) Rs2Bank.closeBank();
                             }
                         } else {
-                            Microbot.log("Failed to load inventory, inventory setup not found: " + config.inventorySetup());
-                            plugin.reportFinished("Birdhouse run failed to load inventory setup",false);
+                            log.error("Failed to load inventory, inventory setup not found: {}", config.inventorySetup());
+                            plugin.reportFinished("Birdhouse run failed to load inventory setup", false);
                             this.shutdown();
                             return;
                         }
                     } else {
-                        // Manual bank withdrawal
+                        // Auto bank withdrawal
                         if (!setupManualInventory()) {
-                            Microbot.log("Failed to setup inventory manually");
-                            plugin.reportFinished("Birdhouse run failed to setup inventory manually",false);
+                            log.error("Birdhouse run failed: {}", setupErrorMessage);
+                            plugin.reportFinished("Birdhouse run failed: " + setupErrorMessage, false);
                             this.shutdown();
                             return;
                         }
@@ -149,9 +153,10 @@ public class FornBirdhouseRunsScript extends Script {
                         seedHouse(birdhouseLocation4, states.FINISHING);
                         break;
                     case FINISHING:
+                        emptyNests();
+                        
                         if (config.goToBank()) {
-                            Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint());
-                            emptyNests();
+                            Rs2Walker.walkTo(BankLocation.FOSSIL_ISLAND_WRECK.getWorldPoint());
                             if (!Rs2Bank.isOpen()) Rs2Bank.openBank();
                             Rs2Bank.depositAll();
                         }
@@ -166,7 +171,7 @@ public class FornBirdhouseRunsScript extends Script {
                 }
 
             } catch (Exception ex) {
-                Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
+                log.error("Error in birdhouse run script", ex);
             }
         }, 0, 1000, TimeUnit.MILLISECONDS);
         return true;
@@ -235,7 +240,8 @@ public class FornBirdhouseRunsScript extends Script {
         
         // Open bank
         if (!Rs2Bank.openBank()) {
-            Microbot.log("Failed to open bank");
+            setupErrorMessage = "Could not open bank";
+            log.error(setupErrorMessage);
             return false;
         }
         sleepUntil(Rs2Bank::isOpen);
@@ -246,13 +252,15 @@ public class FornBirdhouseRunsScript extends Script {
         
         // Withdraw chisel
         if (!Rs2Bank.withdrawX(ItemID.CHISEL, 1)) {
-            Microbot.log("Failed to withdraw chisel");
+            setupErrorMessage = "Missing chisel in bank";
+            log.error(setupErrorMessage);
             return false;
         }
         
         // Withdraw hammer
         if (!Rs2Bank.withdrawX(ItemID.HAMMER, 1)) {
-            Microbot.log("Failed to withdraw hammer");
+            setupErrorMessage = "Missing hammer in bank";
+            log.error(setupErrorMessage);
             return false;
         }
         
@@ -275,21 +283,30 @@ public class FornBirdhouseRunsScript extends Script {
         }
         
         if (!pendantWithdrawn) {
-            Microbot.log("Failed to withdraw digsite pendant");
+            setupErrorMessage = "Missing digsite pendant in bank";
+            log.error(setupErrorMessage);
             return false;
         }
         
         // Withdraw logs
-        LogType selectedLogType = config.logType();
-        if (!Rs2Bank.withdrawX(selectedLogType.getLogID(), 4)) {
-            Microbot.log("Failed to withdraw " + selectedLogType.getLogName());
+		Log selectedLogType = config.logType();
+        // Check if bank has enough logs first
+        int logCount = Rs2Bank.count(selectedLogType.getItemId());
+        if (logCount < 4) {
+            setupErrorMessage = "Need 4 " + selectedLogType.getItemName().toLowerCase() + " but only have " + logCount + " in bank";
+            log.error(setupErrorMessage);
+            return false;
+        }
+        if (!Rs2Bank.withdrawX(selectedLogType.getItemId(), 4)) {
+            setupErrorMessage = "Failed to withdraw " + selectedLogType.getItemName().toLowerCase();
+            log.error(setupErrorMessage);
             return false;
         }
         
         // Withdraw seeds (smart selection)
         boolean seedsWithdrawn = withdrawSeeds();
         if (!seedsWithdrawn) {
-            Microbot.log("Failed to withdraw seeds");
+            // setupErrorMessage is set in withdrawSeeds
             return false;
         }
         
@@ -297,6 +314,7 @@ public class FornBirdhouseRunsScript extends Script {
         Rs2Bank.closeBank();
         sleepUntil(() -> !Rs2Bank.isOpen());
         
+        log.info("Inventory setup complete - starting birdhouse run");
         return true;
     }
 
@@ -315,12 +333,18 @@ public class FornBirdhouseRunsScript extends Script {
         
         for (int seedId : seedIds) {
             if (!isRunning()) break;
-            if (Rs2Bank.withdrawX(seedId, 40)) {
-                Microbot.log("Withdrew 40 of seed ID: " + seedId);
-                return true;
+            // Check if bank has enough BEFORE trying to withdraw
+            if (Rs2Bank.count(seedId) >= 40) {
+                if (Rs2Bank.withdrawX(seedId, 40)) {
+                    log.info("Withdrew 40 of seed ID: {}", seedId);
+                    return true;
+                }
             }
         }
         
+        // If we get here, no seed type had 40+ available
+        setupErrorMessage = "Need 40 seeds but no birdhouse seed type has 40+ in bank";
+        log.error(setupErrorMessage);
         return false;
     }
 }
